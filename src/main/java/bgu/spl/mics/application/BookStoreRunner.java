@@ -116,7 +116,7 @@ public class BookStoreRunner {
             customersArray.add(it.getKey());
             APIServices.add(new APIService(it.getKey().getName(), it.getKey(), it.getValue()));
         }
-        moneyRegister = MoneyRegister.getInstance();
+        moneyRegister = moneyRegister.getInstance();
 
     } // end GsonParser
 }
