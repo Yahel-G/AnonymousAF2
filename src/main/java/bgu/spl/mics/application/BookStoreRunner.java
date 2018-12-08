@@ -14,17 +14,17 @@ import java.util.Vector;
  * In the end, you should output serialized objects.
  */
 public class BookStoreRunner {
-    public static Vector<Thread> Threads = new Vector<>();
-    public static TimeService timeService = null;
-    public static Vector<APIService> APIServices = null;
-    public static Vector<Customer> customersArray = null;
-    public static Vector<InventoryService> inventoryServices = null;
-    public static Vector<SellingService> sellingServices = null;
-    public static Vector<LogisticsService> logisticsServices = null;
-    public static Vector<ResourceService> resourceServices = null;
-    public static Inventory inventory = null;
-    public static ResourcesHolder resourcesHolder = null;
-    public static MoneyRegister moneyRegister = null;//MoneyRegister.getInstance();
+        public static Vector<Thread> Threads = new Vector<>();
+        public static TimeService timeService = null; //Changed
+        public static Vector<APIService> APIServices = null; // Changed
+        public static Vector<Customer> customersArray = null; //Changed
+        public static Vector<InventoryService> inventoryServices = null; //Changed
+        public static Vector<SellingService> sellingServices = null;//Changed
+        public static Vector<LogisticsService> logisticsServices = null;//Changed
+        public static Vector<ResourceService> resourceServices = null;//Changed
+        public static Inventory inventory = null;//Changed
+        public static ResourcesHolder resourcesHolder = null;//Changed
+        public static MoneyRegister moneyRegister = null;//MoneyRegister.getInstance();
 
 
     public static void main(String[] args) {
@@ -95,20 +95,28 @@ public class BookStoreRunner {
         resourcesHolder.getInstance().load(vehicles);
         TimeService Timer = new TimeService(timeSpeed,timeDuration); //BigBen?
         int i;
+        String name;
         for(i = 0 ; i < numOfSelling ; i++){
-            sellingServices.add(new SellingService());
+            name = "Sell "+ Integer.toString(i);
+            sellingServices.add(new SellingService(name));
         }
         for(i = 0 ; i < numOfInventory ; i++){
-            inventoryServices.add(new InventoryService());
+            name = "Inv "+ Integer.toString(i);
+            inventoryServices.add(new InventoryService(name));
         }
         for(i = 0 ; i < numOfLogistics ; i++){
-            logisticsServices.add(new LogisticsService());
+            name = "Log "+ Integer.toString(i);
+            logisticsServices.add(new LogisticsService(name));
         }
         for(i = 0 ; i < numOfResources ; i++){
-            resourceServices.add(new ResourceService());
+            name = "Res "+ Integer.toString(i);
+            resourceServices.add(new ResourceService(name));
         }
-    // hello git world
-        // hello roy
+        for(HashMap.Entry<Customer, List<OrderPair>> it: customers.entrySet()){
+            customersArray.add(it.getKey());
+            APIServices.add(new APIService(it.getKey().getName(), it.getKey(), it.getValue()));
+        }
+        moneyRegister = MoneyRegister.getInstance();
 
     } // end GsonParser
 }
