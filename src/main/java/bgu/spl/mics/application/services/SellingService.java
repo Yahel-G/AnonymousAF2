@@ -24,8 +24,8 @@ public class SellingService extends MicroService{
 	private MoneyRegister moneyRegister;
 	private int theTimeNow;
 
-	public SellingService() {
-		super("SomeSellingService");
+	public SellingService(String name) {
+		super(name);
 		moneyRegister.getInstance();
 	}
 
