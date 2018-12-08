@@ -36,8 +36,8 @@ public class APIService extends MicroService{
 	private Vector<Future<OrderReceipt>> futReceipts;
 	private Vector<OrderReceipt> actualReceipts;
 
-	public APIService(Customer customer, List<OrderPair> orderSchedule) {
-		super("SomeAPIService");
+	public APIService(String name ,Customer customer, List<OrderPair> orderSchedule) {
+		super(name);
 		daCustomer = customer;
 		theTime = -1;
 		futReceipts = new Vector<>();
