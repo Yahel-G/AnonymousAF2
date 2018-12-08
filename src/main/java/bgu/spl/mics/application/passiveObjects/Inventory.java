@@ -1,6 +1,9 @@
 package bgu.spl.mics.application.passiveObjects;
 
 
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
 import java.util.concurrent.*;
 
 /**
@@ -93,21 +96,15 @@ public class Inventory {
      * This method is called by the main method in order to generate the output.
      */
 	public void printInventoryToFile(String filename){
-		//TODO: Implement this
+		try {
+			FileOutputStream file = new FileOutputStream(filename);
+			ObjectOutputStream oos = new ObjectOutputStream(file);
+			oos.writeObject(bookMap);
+			oos.close();
+			file.close();
+		} catch (IOException ioe) {
+			ioe.printStackTrace();
+		}
 	}
-
-
-
-
-
-	/*
-* 	ONLY FOR TESTING --- DELETE WHEN SUBMIT
-* */
-/*
-	public LinkedList<BookInventoryInfo> getListForTesting(){
-		return bookList;
-	}
-*/
-
 
 }
