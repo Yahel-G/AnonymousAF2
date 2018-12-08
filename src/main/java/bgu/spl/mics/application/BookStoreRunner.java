@@ -107,7 +107,7 @@ public class BookStoreRunner {
         for(i = 0 ; i < numOfResources ; i++){
             resourceServices.add(new ResourceService());
         }
-
+    // hello git world
 
     } // end GsonParser
 }
