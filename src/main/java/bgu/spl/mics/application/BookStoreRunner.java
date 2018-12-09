@@ -24,12 +24,35 @@ public class BookStoreRunner {
         public static Vector<ResourceService> resourceServices = null;//Changed
         public static Inventory inventory = null;//Changed
         public static ResourcesHolder resourcesHolder = null;//Changed
-        public static MoneyRegister moneyRegister = null;//MoneyRegister.getInstance();
+        public static MoneyRegister moneyRegister = null;//changed
 
 
     public static void main(String[] args) {
         GsonParser();
+        Vector<Runnable> runnables = new Vector<>();
+        for (int i = 0; i< APIServices.size(); i++){
+            runnables.add(APIServices.elementAt(i));
+        }
+        for (int i = 0; i< inventoryServices.size(); i++){
+            runnables.add(inventoryServices.elementAt(i));
+        }
+        for (int i = 0; i< sellingServices.size(); i++){
+            runnables.add(sellingServices.elementAt(i));
+        }
+        for (int i = 0; i< logisticsServices.size(); i++){
+            runnables.add(logisticsServices.elementAt(i));
+        }
+        for (int i = 0; i< resourceServices.size(); i++){
+            runnables.add(resourceServices.elementAt(i));
+        }
+        runnables.add(timeService);
 
+        for(Runnable r: runnables){
+            Threads.add(new Thread(r));
+        }
+        for (Thread t: Threads){
+            t.run();
+        }
     }
 
     private static void GsonParser(){
@@ -93,7 +116,7 @@ public class BookStoreRunner {
 
         inventory.getInstance().load(booksInventory);
         resourcesHolder.getInstance().load(vehicles);
-        TimeService Timer = new TimeService(timeSpeed,timeDuration); //BigBen?
+        timeService = new TimeService(timeSpeed,timeDuration); //BigBen?
         int i;
         String name;
         for(i = 0 ; i < numOfSelling ; i++){
