@@ -42,6 +42,7 @@ public class APIService extends MicroService{
 		theTime = -1;
 		futReceipts = new Vector<>();
 		actualReceipts = new Vector<>();
+		scheduler = new HashMap<>();
 		for (OrderPair OP: orderSchedule){
 			if(scheduler.containsKey(OP.getTick())){	// if the scheduler already has a book in this time tick
 				scheduler.get(OP.getTick()).add(OP.getBookTitle());	// add this book to the list of books to be ordered in this tick
