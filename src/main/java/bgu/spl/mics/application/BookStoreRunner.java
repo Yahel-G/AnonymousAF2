@@ -58,9 +58,13 @@ public class BookStoreRunner {
         for(Runnable r: runnables){
             Threads.add(new Thread(r));
         }
+
+
+        // One day I just felt like running
         for (Thread t: Threads){
             t.run();
         }
+
     }
 
     private static void GsonParser(){
@@ -148,6 +152,9 @@ public class BookStoreRunner {
             APIServices.add(new APIService(it.getKey().getName(), it.getKey(), it.getValue()));
         }
         moneyRegister = moneyRegister.getInstance();
+
+
+
 
     } // end GsonParser
 }
