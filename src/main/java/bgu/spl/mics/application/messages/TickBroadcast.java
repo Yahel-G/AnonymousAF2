@@ -19,6 +19,6 @@ public class TickBroadcast implements Broadcast {
     }
 
     public int getTimeOfDeath() {
-        return timeOfDeath; 
+        return timeOfDeath;
     }
 }
