@@ -8,6 +8,8 @@ import bgu.spl.mics.application.messages.TickBroadcast;
 import bgu.spl.mics.application.passiveObjects.DeliveryVehicle;
 import bgu.spl.mics.application.passiveObjects.ResourcesHolder;
 
+import java.util.concurrent.Semaphore;
+
 /**
  * ResourceService is in charge of the store resources - the delivery vehicles.
  * Holds a reference to the {@link ResourceHolder} singleton of the store.
@@ -38,7 +40,14 @@ public class ResourceService extends MicroService{
 			}
 		});
 		subscribeEvent(FreeVehicleEvent.class, free ->{
+			Semaphore locker = new Semaphore(1);
+			try {
+				locker.acquire();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
 			holder.releaseVehicle(free.getVehicle());
+			locker.release();
 		});
 	}
 

@@ -8,6 +8,8 @@ import bgu.spl.mics.application.passiveObjects.MoneyRegister;
 import bgu.spl.mics.application.passiveObjects.OrderReceipt;
 import bgu.spl.mics.application.passiveObjects.OrderResult;
 
+import java.util.concurrent.Semaphore;
+
 /**
  * Selling service in charge of taking orders from customers.
  * Holds a reference to the {@link MoneyRegister} singleton of the store.
@@ -44,6 +46,12 @@ public class SellingService extends MicroService{
 			customer = seller.getCustomer();
 			int processedTick = theTimeNow;
 			Future<Integer> bookPrice = sendEvent(new CheckAvailabilityEvent(bookTitle));
+			Semaphore locker = new Semaphore(1);
+			try {
+				locker.acquire();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
 			if (bookPrice.get() != -1){
 				if(customer.getAvailableCreditAmount() >= bookPrice.get()){	/// sync this
 					Future<OrderResult> orderResultFuture = sendEvent(new TakeBookEvent(bookTitle));
@@ -56,6 +64,7 @@ public class SellingService extends MicroService{
 						complete(seller, null); // is this necessary? if it is, need to add more of these here maybe.
 					}
 				}
+				locker.release();
 
 			}
 		});

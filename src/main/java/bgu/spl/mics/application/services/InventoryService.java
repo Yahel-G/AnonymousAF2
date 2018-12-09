@@ -8,6 +8,8 @@ import bgu.spl.mics.application.passiveObjects.Inventory;
 import bgu.spl.mics.application.passiveObjects.OrderReceipt;
 import bgu.spl.mics.application.passiveObjects.OrderResult;
 
+import java.util.concurrent.Semaphore;
+
 /**
  * InventoryService is in charge of the book inventory and stock.
  * Holds a reference to the {@link Inventory} singleton of the store.
@@ -35,10 +37,23 @@ public class InventoryService extends MicroService{
 		});
 
 		subscribeEvent(CheckAvailabilityEvent.class, check ->{
+			Semaphore locker = new Semaphore(1);
+			try {
+				locker.acquire();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
 				complete(check, inventory.checkAvailabiltyAndGetPrice(check.getBookTitle()));
+			locker.release();
 		});
 
 		subscribeEvent(TakeBookEvent.class, take ->{
+			Semaphore locker = new Semaphore(1);
+			try {
+				locker.acquire();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
 			if (inventory.checkAvailabiltyAndGetPrice(take.getBookTitle()) > -1){
 				inventory.take(take.getBookTitle());
 				complete(take, OrderResult.SUCCESSFULLY_TAKEN);
@@ -46,6 +61,7 @@ public class InventoryService extends MicroService{
 			else{
 				complete(take, OrderResult.NOT_IN_STOCK);
 			}
+			locker.release();
 		});
 
 	}
