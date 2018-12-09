@@ -3,6 +3,7 @@ package bgu.spl.mics.application.services;
 import bgu.spl.mics.MicroService;
 import bgu.spl.mics.application.messages.CheckAvailabilityEvent;
 import bgu.spl.mics.application.messages.TakeBookEvent;
+import bgu.spl.mics.application.messages.TickBroadcast;
 import bgu.spl.mics.application.passiveObjects.Inventory;
 import bgu.spl.mics.application.passiveObjects.OrderReceipt;
 import bgu.spl.mics.application.passiveObjects.OrderResult;
@@ -27,6 +28,12 @@ public class InventoryService extends MicroService{
 
 	@Override
 	protected void initialize() {
+		subscribeBroadcast(TickBroadcast.class, clock -> {
+			if (clock.getTimeOfDeath() == clock.giveMeSomeTime()) {
+				terminate();
+			}
+		});
+
 		subscribeEvent(CheckAvailabilityEvent.class, check ->{
 				complete(check, inventory.checkAvailabiltyAndGetPrice(check.getBookTitle()));
 		});

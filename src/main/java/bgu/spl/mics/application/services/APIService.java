@@ -59,6 +59,9 @@ public class APIService extends MicroService{
 	@Override
 	protected void initialize() {
 		subscribeBroadcast(TickBroadcast.class, clock ->{
+			if(clock.getTimeOfDeath() == clock.giveMeSomeTime()){
+				terminate();
+			}
 			theTime = clock.giveMeSomeTime();
 			if (scheduler.containsKey(theTime)){
 				for (String bookTitle: scheduler.get(theTime)){

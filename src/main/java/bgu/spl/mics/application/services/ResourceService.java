@@ -4,6 +4,7 @@ import bgu.spl.mics.Future;
 import bgu.spl.mics.MicroService;
 import bgu.spl.mics.application.messages.AcquireVehicleEvent;
 import bgu.spl.mics.application.messages.FreeVehicleEvent;
+import bgu.spl.mics.application.messages.TickBroadcast;
 import bgu.spl.mics.application.passiveObjects.DeliveryVehicle;
 import bgu.spl.mics.application.passiveObjects.ResourcesHolder;
 
@@ -25,6 +26,11 @@ public class ResourceService extends MicroService{
 
 	@Override
 	protected void initialize() {
+		subscribeBroadcast(TickBroadcast.class, clock -> {
+			if (clock.getTimeOfDeath() == clock.giveMeSomeTime()) {
+				terminate();
+			}
+		});
 		subscribeEvent(AcquireVehicleEvent.class, getTaxi->{
 			Future<DeliveryVehicle> taxi = holder.acquireVehicle();
 			if (taxi.get() != null){

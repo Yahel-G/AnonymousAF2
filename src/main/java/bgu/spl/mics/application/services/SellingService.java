@@ -32,8 +32,12 @@ public class SellingService extends MicroService{
 	@Override
 	protected void initialize() {
 		subscribeBroadcast(TickBroadcast.class, time->{
+			if (time.getTimeOfDeath() == time.giveMeSomeTime()) {
+				terminate();
+			}
 			theTimeNow = time.giveMeSomeTime();
 		});
+
 
 		subscribeEvent(BookOrderEvent.class, seller ->{
 			bookTitle = seller.getBookTitle();

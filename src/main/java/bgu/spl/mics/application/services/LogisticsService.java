@@ -5,6 +5,7 @@ import bgu.spl.mics.MicroService;
 import bgu.spl.mics.application.messages.AcquireVehicleEvent;
 import bgu.spl.mics.application.messages.DeliveryEvent;
 import bgu.spl.mics.application.messages.FreeVehicleEvent;
+import bgu.spl.mics.application.messages.TickBroadcast;
 import bgu.spl.mics.application.passiveObjects.DeliveryVehicle;
 
 /**
@@ -24,6 +25,11 @@ public class LogisticsService extends MicroService {
 
 	@Override
 	protected void initialize() {
+		subscribeBroadcast(TickBroadcast.class, clock -> {
+			if (clock.getTimeOfDeath() == clock.giveMeSomeTime()) {
+				terminate();
+			}
+		});
 		subscribeEvent(DeliveryEvent.class, delivery ->{
 			Future<Future<DeliveryVehicle>> FutureDeliveryVehicleFuture = sendEvent(new AcquireVehicleEvent(delivery.getDistance(), delivery.getAddress()));
 			FutureDeliveryVehicleFuture.get().get().deliver(delivery.getAddress(), delivery.getDistance());
