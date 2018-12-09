@@ -33,7 +33,7 @@ public class TimeService extends MicroService{
 		ticksPassed = 1; // "The current time always starts from 1"
 		ActionListener taskPerformer = new ActionListener() {
 			public void actionPerformed(ActionEvent evt) {
-				sendBroadcast(new TickBroadcast(ticksPassed*speed));
+				sendBroadcast(new TickBroadcast(ticksPassed*speed, duration));
 				ticksPassed++;
 			}
 		};
