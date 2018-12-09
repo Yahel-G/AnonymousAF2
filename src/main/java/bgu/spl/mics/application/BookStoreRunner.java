@@ -14,7 +14,7 @@ import java.util.Vector;
  * In the end, you should output serialized objects.
  */
 public class BookStoreRunner {
-        public static Vector<Thread> Threads = new Vector<>();
+        public static Vector<Thread> Threads = null;
         public static TimeService timeService = null; //Changed
         public static Vector<APIService> APIServices = null; // Changed
         public static Vector<Customer> customersArray = null; //Changed
@@ -28,6 +28,14 @@ public class BookStoreRunner {
 
 
     public static void main(String[] args) {
+        Threads = new Vector<>();
+        APIServices = new Vector<>();
+        customersArray = new Vector<>();
+        inventoryServices = new Vector<>();
+        sellingServices = new Vector<>();
+        logisticsServices = new Vector<>();
+        resourceServices = new Vector<>();
+
         GsonParser();
         Vector<Runnable> runnables = new Vector<>();
         for (int i = 0; i< APIServices.size(); i++){
@@ -105,10 +113,10 @@ public class BookStoreRunner {
                     customer.getAsJsonObject().getAsJsonPrimitive("distance").getAsInt(),
                     customer.getAsJsonObject().getAsJsonObject("creditCard").getAsJsonObject().get("number").getAsInt(),
                     customer.getAsJsonObject().getAsJsonObject("creditCard").getAsJsonObject().get("amount").getAsInt());
-            List<OrderPair> tempSchedule = null;
+            List<OrderPair> tempSchedule = new Vector<>();
             JsonArray schedules = customer.getAsJsonObject().getAsJsonArray("orderSchedule");
             for(JsonElement schedule: schedules){
-                tempSchedule.add(new OrderPair(schedule.getAsJsonObject().get("tick").getAsInt(),
+                tempSchedule.add(new OrderPair(schedule.getAsJsonObject().get("tick").getAsJsonPrimitive().getAsInt(),
                         schedule.getAsJsonObject().get("bookTitle").getAsString()));
             }
             customers.put(tempCust, tempSchedule);
