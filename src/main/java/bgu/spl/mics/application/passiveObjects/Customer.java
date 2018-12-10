@@ -85,7 +85,7 @@ public class Customer {
 
 
 	public void chargeCredit (int howMuch){
-		// if check is only a safe check - the credit amount should be check by the seller microService.
+		// if check is only a safe check - the credit amount should be checked by the seller microService.
 		if (availableAmountInCreditCard >= howMuch){
 			availableAmountInCreditCard = availableAmountInCreditCard - howMuch;
 		}
