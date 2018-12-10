@@ -86,15 +86,25 @@ public class MessageBusImpl implements MessageBus {
 	@Override
 	// round robin
 	public <T> Future<T> sendEvent(Event<T> e) {
-		if(!Events.containsKey(e.getClass())){
-		    return null;}
+		ConcurrentLinkedQueue<MicroService> queue;
+		Future<T> fut = null;
+		MicroService service;
+		Semaphore locker = new Semaphore(1);
+		try {
+			locker.acquire();
+		} catch (InterruptedException ex) {
+			ex.printStackTrace();
+		}
+		if(Events.get(e.getClass()) != null){
+			queue = Events.get(e.getClass());
+			service = queue.poll();
+			queue.add(service);
+			microServices.get(service).add(e);
+			fut = new Future<T>();
+			FuturesMap.put(e, fut);
+		}
+			locker.release();
 
-        Future<T> fut = new Future<T>();
-		FuturesMap.put (e , fut);
-		MicroService m = null;
-		m = Events.get(e.getClass()).poll(); //we took out a micro service
-		microServices.get(m).add(e);
-		Events.get(e).add(m); // we put the micro service to the end of the queue- round robin.
 		return fut;
 	}
 
