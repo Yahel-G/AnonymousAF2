@@ -45,26 +45,28 @@ public class SellingService extends MicroService{
 			bookTitle = seller.getBookTitle();
 			customer = seller.getCustomer();
 			int processedTick = theTimeNow;
-			Future<Integer> bookPrice = sendEvent(new CheckAvailabilityEvent(bookTitle));
 			Semaphore locker = new Semaphore(1);
 			try {
 				locker.acquire();
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
-			if (bookPrice.get() != -1){
-				if(customer.getAvailableCreditAmount() >= bookPrice.get()){	/// sync this
+			Future<Integer> bookPrice = sendEvent(new CheckAvailabilityEvent(bookTitle));
+			int price = bookPrice.get();
+			if (price != -1){
+				if(customer.getAvailableCreditAmount() >= price){	/// sync this
 					Future<OrderResult> orderResultFuture = sendEvent(new TakeBookEvent(bookTitle));
 					if (orderResultFuture.get() == OrderResult.SUCCESSFULLY_TAKEN){
-						moneyRegister.chargeCreditCard(customer, bookPrice.get());
+						moneyRegister.chargeCreditCard(customer, price);
+						locker.release();
 						sendEvent(new DeliveryEvent(customer.getDistance(), customer.getAddress()));
-						complete(seller, new OrderReceipt(customer.getId(), getName(), bookTitle, bookPrice.get(), theTimeNow, seller.getOrderedTick(), processedTick));
+						complete(seller, new OrderReceipt(customer.getId(), getName(), bookTitle, price, theTimeNow, seller.getOrderedTick(), processedTick));
 					}
 					else{
 						complete(seller, null); // is this necessary? if it is, need to add more of these here maybe.
+						locker.release();
 					}
 				}
-				locker.release();
 
 			}
 		});
