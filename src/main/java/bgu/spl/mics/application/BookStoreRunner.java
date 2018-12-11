@@ -7,6 +7,7 @@ import com.google.gson.*;
 import java.io.*;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Scanner;
 import java.util.Vector;
 
 /** This is the Main class of the application. You should parse the input file,
@@ -69,8 +70,23 @@ public class BookStoreRunner {
     private static void GsonParser(){
         JsonParser Parser = new JsonParser();
         InputStream inputStream = null;
+        System.out.println("Please enter the jason input file only...");
+        Scanner scanner = new Scanner(System.in);
+        String inputFile = scanner.nextLine();
+        System.out.println("Please enter the Customer output file only...");
+        scanner = new Scanner(System.in);
+        String CustomerOutput = scanner.nextLine();
+        System.out.println("Please enter the books output file only...");
+        scanner = new Scanner(System.in);
+        String booksOutput = scanner.nextLine();
+        System.out.println("Please enter the receipt output file only...");
+        scanner = new Scanner(System.in);
+        String receiptOutput = scanner.nextLine();
+        System.out.println("Please enter the register output file only...");
+        scanner = new Scanner(System.in);
+        String registerOutput = scanner.nextLine();
         try {
-            inputStream = new FileInputStream("input.json");
+            inputStream = new FileInputStream(inputFile); // input.json
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
