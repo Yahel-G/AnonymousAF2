@@ -110,7 +110,7 @@ public class BookStoreRunner {
                     customer.getAsJsonObject().getAsJsonPrimitive("distance").getAsInt(),
                     customer.getAsJsonObject().getAsJsonObject("creditCard").getAsJsonObject().get("number").getAsInt(),
                     customer.getAsJsonObject().getAsJsonObject("creditCard").getAsJsonObject().get("amount").getAsInt());
-            List<OrderPair> tempSchedule = null;
+            List<OrderPair> tempSchedule = new Vector<>();
             JsonArray schedules = customer.getAsJsonObject().getAsJsonArray("orderSchedule");
             for(JsonElement schedule: schedules){
                 tempSchedule.add(new OrderPair(schedule.getAsJsonObject().get("tick").getAsInt(),
