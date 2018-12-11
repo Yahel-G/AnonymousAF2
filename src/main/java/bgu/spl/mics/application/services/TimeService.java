@@ -52,5 +52,4 @@ public class TimeService extends MicroService{
 			}
 		});
 	}
-// TODO terminate this when duration reached
 }
