@@ -28,8 +28,19 @@ public class BookStoreRunner {
 
 
     public static void main(String[] args) {
-        GsonParser();
+
         Vector<Runnable> runnables = new Vector<>();
+        APIServices = new Vector<>();
+        customersArray = new Vector<>();
+        inventoryServices = new Vector<>();
+        inventoryServices = new Vector<>();
+        sellingServices = new Vector<>();
+        logisticsServices = new Vector<>();
+        resourceServices = new Vector<>();
+
+        GsonParser();
+
+
         for (int i = 0; i< APIServices.size(); i++){
             runnables.add(APIServices.elementAt(i));
         }
