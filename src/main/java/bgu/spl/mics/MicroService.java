@@ -1,5 +1,4 @@
 package bgu.spl.mics;
-import java.util.HashMap;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -127,7 +126,10 @@ public abstract class MicroService implements Runnable {
      *               {@code e}.
      */
     protected final <T> void complete(Event<T> e, T result) {
+        daBus.complete(e , result);
         FuturesMap.get(e).resolve(result);
+        callbackMap.get(e).call(e);
+
     }
 
     /**
@@ -163,7 +165,12 @@ public abstract class MicroService implements Runnable {
             Message daMsg;
             try {
                 daMsg = daBus.awaitMessage(this);
-                callbackMap.get(daMsg);
+                if(daMsg!=null) {
+                    if(callbackMap.containsKey(daMsg.getClass())) {
+                        Callback c = callbackMap.get(daMsg.getClass());
+                        c.call(daMsg);
+                    }
+                }
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }

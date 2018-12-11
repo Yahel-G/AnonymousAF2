@@ -62,12 +62,7 @@ public class BookStoreRunner {
             Threads.add(new Thread(r));
         }
         for (Thread t: Threads){
-            // this is the change for termination
-            while (!t.isInterrupted()){
-                t.run();
-            }
-            t.interrupt();
-            // end change
+                t.start();
         }
     }
 

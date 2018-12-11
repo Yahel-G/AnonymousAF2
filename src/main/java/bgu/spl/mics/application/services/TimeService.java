@@ -30,11 +30,13 @@ public class TimeService extends MicroService{
 		super("The_Big_Ben");
 		this.speed = speed;
 		this.duration = duration;
-		ticksPassed = 1; // "The current time always starts from 1"
+		ticksPassed = 0; // "The current time always starts from 1"
 		ActionListener taskPerformer = new ActionListener() {
 			public void actionPerformed(ActionEvent evt) {
-				sendBroadcast(new TickBroadcast(ticksPassed*speed, duration));
-				ticksPassed++;
+				if (ticksPassed < duration) {
+					ticksPassed++;
+					sendBroadcast(new TickBroadcast(ticksPassed * speed, duration, speed));
+				}
 			}
 		};
 			BigBen = new Timer(speed, taskPerformer);
@@ -43,6 +45,12 @@ public class TimeService extends MicroService{
 	@Override
 	protected void initialize() {
 		BigBen.start();
+		subscribeBroadcast(TickBroadcast.class, clock -> {
+			if (clock.getTimeOfDeath() == clock.giveMeSomeTime()) {
+				terminate();
+				System.out.println(getName() + " was terminated.");
+			}
+		});
 	}
 // TODO terminate this when duration reached
 }

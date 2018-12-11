@@ -66,7 +66,6 @@ public class MessageBusImpl implements MessageBus {
 	@Override
 	public <T> void complete(Event<T> e, T result) {
 		FuturesMap.get(e).resolve(result);
-
 	}
 
 	@Override
@@ -100,6 +99,7 @@ public class MessageBusImpl implements MessageBus {
 			service = queue.poll();
 			queue.add(service);
 			microServices.get(service).add(e);
+			microServices.notifyAll(); // here? TODO  check this
 			fut = new Future<T>();
 			FuturesMap.put(e, fut);
 		}
@@ -141,6 +141,9 @@ public class MessageBusImpl implements MessageBus {
 //		return microServices.get(m).take();
 		Lock lock1 = new ReentrantLock(); // a more sophisticated and flexiable way to synchronize.
 		lock1.lock();
+		while( microServices.get(m).take() == null){
+			m.wait();
+		}
 		Message tmp = microServices.get(m).take();
 		lock1.unlock();
 		return tmp;
