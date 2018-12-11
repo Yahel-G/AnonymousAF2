@@ -70,21 +70,19 @@ public class BookStoreRunner {
     private static void GsonParser(){
         JsonParser Parser = new JsonParser();
         InputStream inputStream = null;
-        System.out.println("Please enter the jason input file only...");
+        System.out.println("Please enter the jason input and output files: input, output(Customer, Books, Receipts, MoneyRegister...");
         Scanner scanner = new Scanner(System.in);
-        String inputFile = scanner.nextLine();
-        System.out.println("Please enter the Customer output file only...");
-        scanner = new Scanner(System.in);
-        String CustomerOutput = scanner.nextLine();
-        System.out.println("Please enter the books output file only...");
-        scanner = new Scanner(System.in);
-        String booksOutput = scanner.nextLine();
-        System.out.println("Please enter the receipt output file only...");
-        scanner = new Scanner(System.in);
-        String receiptOutput = scanner.nextLine();
-        System.out.println("Please enter the register output file only...");
-        scanner = new Scanner(System.in);
-        String registerOutput = scanner.nextLine();
+        String inputFile = scanner.next();
+        String customerOutput = scanner.next();
+        String booksOutput = scanner.next();
+        String receiptOutput = scanner.next();
+        String registerOutput = scanner.next();
+
+        try {
+            inputStream = new FileInputStream(inputFile); // input.json
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
         try {
             inputStream = new FileInputStream(inputFile); // input.json
         } catch (FileNotFoundException e) {
