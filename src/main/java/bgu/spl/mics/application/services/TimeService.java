@@ -44,5 +44,5 @@ public class TimeService extends MicroService{
 	protected void initialize() {
 		BigBen.start();
 	}
-
+// TODO terminate this when duration reached
 }

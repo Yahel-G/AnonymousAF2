@@ -28,6 +28,7 @@ public class LogisticsService extends MicroService {
 		subscribeBroadcast(TickBroadcast.class, clock -> {
 			if (clock.getTimeOfDeath() == clock.giveMeSomeTime()) {
 				terminate();
+				System.out.println(getName() + " was terminated.");
 			}
 		});
 		subscribeEvent(DeliveryEvent.class, delivery ->{

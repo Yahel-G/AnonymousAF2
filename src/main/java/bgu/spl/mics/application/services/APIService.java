@@ -62,6 +62,7 @@ public class APIService extends MicroService{
 		subscribeBroadcast(TickBroadcast.class, clock ->{
 			if(clock.getTimeOfDeath() == clock.giveMeSomeTime()){
 				terminate();
+				System.out.println(getName() + " was terminated.");
 			}
 			theTime = clock.giveMeSomeTime();
 			if (scheduler.containsKey(theTime)){
