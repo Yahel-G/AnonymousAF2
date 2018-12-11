@@ -1,5 +1,4 @@
 package bgu.spl.mics;
-import java.util.HashMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -172,8 +171,10 @@ public abstract class MicroService implements Runnable {
         daBus.unregister(this);
     }
 
+    public AtomicBoolean isTerminted(){
+        return terminated;
+    }
     public void interrupt(){
         terminated.set(true);
-        this.interrupt();
     }
 }
