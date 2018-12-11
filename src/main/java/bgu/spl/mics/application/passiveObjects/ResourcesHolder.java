@@ -36,7 +36,6 @@ public class ResourcesHolder {
      * Retrieves the single instance of this class.
      */
 	public static ResourcesHolder getInstance() {
-
 		return singletonHolder.Holder;
 	}
 	
