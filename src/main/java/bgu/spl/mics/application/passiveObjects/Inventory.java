@@ -4,6 +4,7 @@ package bgu.spl.mics.application.passiveObjects;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.util.concurrent.*;
 
 /**
@@ -16,7 +17,7 @@ import java.util.concurrent.*;
  * <p>
  * You can add ONLY private fields and methods to this class as you see fit.
  */
-public class Inventory {
+public class Inventory implements Serializable {
 
 	/**
      * Retrieves the single instance of this class.
@@ -95,7 +96,7 @@ public class Inventory {
      * their respective available amount in the inventory.
      * This method is called by the main method in order to generate the output.
      */
-	public void printInventoryToFile(String filename){
+	public void printToFile(String filename){
 		try {
 			FileOutputStream file = new FileOutputStream(filename);
 			ObjectOutputStream oos = new ObjectOutputStream(file);

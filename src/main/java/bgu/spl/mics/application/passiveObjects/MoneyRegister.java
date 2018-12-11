@@ -4,6 +4,9 @@ package bgu.spl.mics.application.passiveObjects;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -15,7 +18,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * <p>
  * You can add ONLY private fields and methods to this class as you see fit.
  */
-public class MoneyRegister {
+public class MoneyRegister implements Serializable {
 
 	private static class singletonHolder{
 		private static MoneyRegister daRegister = new MoneyRegister();
@@ -68,11 +71,25 @@ public class MoneyRegister {
      * currently in the MoneyRegister
      * This method is called by the main method in order to generate the output.. 
      */
-	public void printOrderReceipts(String filename) {
+	public void printToFile(String filename) {
 		try {
 			FileOutputStream file = new FileOutputStream(filename);
 			ObjectOutputStream oos = new ObjectOutputStream(file);
 			oos.writeObject(Receipts);
+			oos.writeObject(totalEarnings);
+			oos.close();
+			file.close();
+		} catch (IOException ioe) {
+			ioe.printStackTrace();
+		}
+	}
+
+	public void printReceipts(String filename) {
+		List<OrderReceipt> recList = new ArrayList<OrderReceipt>(Receipts.values());
+		try {
+			FileOutputStream file = new FileOutputStream(filename);
+			ObjectOutputStream oos = new ObjectOutputStream(file);
+			oos.writeObject(recList);
 			oos.close();
 			file.close();
 		} catch (IOException ioe) {
