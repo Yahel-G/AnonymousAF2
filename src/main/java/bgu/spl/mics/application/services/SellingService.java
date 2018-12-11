@@ -36,7 +36,6 @@ public class SellingService extends MicroService{
 		subscribeBroadcast(TickBroadcast.class, time->{
 			if (time.getTimeOfDeath() == time.giveMeSomeTime()) {
 				terminate();
-				System.out.println(getName() + " was terminated.");
 			}
 			theTimeNow = time.giveMeSomeTime();
 		});

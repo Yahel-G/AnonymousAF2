@@ -176,6 +176,7 @@ public abstract class MicroService implements Runnable {
             }
         }
         daBus.unregister(this);
+        System.out.println(getName() + " was terminated.");
     }
 
 }

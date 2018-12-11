@@ -31,7 +31,6 @@ public class ResourceService extends MicroService{
 		subscribeBroadcast(TickBroadcast.class, clock -> {
 			if (clock.getTimeOfDeath() == clock.giveMeSomeTime()) {
 				terminate();
-				System.out.println(getName() + " was terminated.");
 			}
 		});
 		subscribeEvent(AcquireVehicleEvent.class, getTaxi->{
