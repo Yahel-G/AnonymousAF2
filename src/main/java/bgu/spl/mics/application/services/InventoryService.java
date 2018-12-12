@@ -35,7 +35,6 @@ public class InventoryService extends MicroService{
 	protected void initialize() {
 		subscribeBroadcast(TickBroadcast.class, clock -> {
 			if (clock.getTimeOfDeath() == clock.giveMeSomeTime()) {
-				int ia; //todo delete
 				terminate();
 			}
 		});
@@ -47,7 +46,8 @@ public class InventoryService extends MicroService{
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
-				complete(check, inventory.checkAvailabiltyAndGetPrice(check.getBookTitle()));
+			int thePrice = inventory.checkAvailabiltyAndGetPrice(check.getBookTitle());
+				complete(check, thePrice);
 			locker.release();
 		});
 

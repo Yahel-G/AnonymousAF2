@@ -1,9 +1,10 @@
 package bgu.spl.mics;
 
 import java.util.Iterator;
-import java.util.concurrent.*;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.Semaphore;
 
 /**
  * The {@link MessageBusImpl class is the implementation of the MessageBus interface.
@@ -143,18 +144,16 @@ public class MessageBusImpl implements MessageBus {
 	@Override
 	public Message awaitMessage(MicroService m) throws InterruptedException {
 		if (!microServices.containsKey(m)){
-			throw new InterruptedException("Micro Service does not exist.");
-		}
-//		while (microServices.get(m) == null);
-//		return microServices.get(m).take();
-		Lock lock1 = new ReentrantLock(); // a more sophisticated and flexiable way to synchronize.
-		lock1.lock();
-		while( microServices.get(m).take() == null){
-			m.wait();
+			throw new IllegalStateException("Micro Service does not exist.");
 		}
 		Message tmp = microServices.get(m).take();
-		lock1.unlock();
 		return tmp;
+//		while (microServices.get(m) == null);
+//		return microServices.get(m).take();
+///		Lock lock1 = new ReentrantLock(); // a more sophisticated and flexiable way to synchronize.
+//		lock1.lock();
+
+
 	}
 
 	

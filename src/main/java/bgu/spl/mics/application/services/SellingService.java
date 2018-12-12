@@ -36,7 +36,6 @@ public class SellingService extends MicroService{
 	protected void initialize() {
 		subscribeBroadcast(TickBroadcast.class, time->{
 			if (time.getTimeOfDeath() == time.giveMeSomeTime()) {
-				int ia = 1;//todo
 				terminate();
 			}
 			theTimeNow = time.giveMeSomeTime();
@@ -61,8 +60,10 @@ public class SellingService extends MicroService{
 					if (orderResultFuture.get() == OrderResult.SUCCESSFULLY_TAKEN){
 						moneyRegister.chargeCreditCard(customer, price);
 				//		locker.release();
+						OrderReceipt receipt = new OrderReceipt(customer.getId(), getName(), bookTitle, price, theTimeNow, seller.getOrderedTick(), processedTick);
+						moneyRegister.file(receipt);
 						sendEvent(new DeliveryEvent(customer.getDistance(), customer.getAddress()));
-						complete(seller, new OrderReceipt(customer.getId(), getName(), bookTitle, price, theTimeNow, seller.getOrderedTick(), processedTick));
+						complete(seller, receipt);
 					}
 					else{
 						complete(seller, null); // is this necessary? if it is, need to add more of these here maybe.

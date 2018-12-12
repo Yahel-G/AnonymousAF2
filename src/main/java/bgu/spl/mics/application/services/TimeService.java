@@ -11,6 +11,8 @@ import java.awt.event.ActionListener;
 import java.util.Vector;
 import java.util.concurrent.CountDownLatch;
 
+import static java.lang.Thread.sleep;
+
 /**
  * TimeService is the global system timer There is only one instance of this micro-service.
  * It keeps track of the amount of ticks passed since initialization and notifies
@@ -54,6 +56,11 @@ public class TimeService extends MicroService{
 		BigBen.start();
 		subscribeBroadcast(TickBroadcast.class, clock -> {
 			if (clock.getTimeOfDeath() == clock.giveMeSomeTime()) {
+				try { // TODO: Remove this - it's bad - no magic numbers. find another way to make sure this service terminates last
+					sleep(1500);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
 				terminate();
 			}
 		});

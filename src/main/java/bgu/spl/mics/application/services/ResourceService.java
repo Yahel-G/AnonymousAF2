@@ -33,7 +33,6 @@ public class ResourceService extends MicroService{
 	protected void initialize() {
 		subscribeBroadcast(TickBroadcast.class, clock -> {
 			if (clock.getTimeOfDeath() == clock.giveMeSomeTime()) {
-				int ia; // todo
 				terminate();
 			}
 		});

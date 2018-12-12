@@ -91,7 +91,7 @@ public class BookStoreRunner implements Serializable {
         Thread TS = new Thread(timeService);
         TS.start();
         try {   // joining so we won't print stuff before the threads finished running
-            TS.join();
+            TS.join();     // TODO: ensure TS terminates LAST (doesn't happen atm -- I THINK)
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
