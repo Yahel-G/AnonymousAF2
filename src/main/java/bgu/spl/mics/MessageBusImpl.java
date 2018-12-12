@@ -40,14 +40,21 @@ public class MessageBusImpl implements MessageBus {
 
 	@Override
 	public <T> void subscribeEvent(Class<? extends Event<T>> type, MicroService m) {
+		Semaphore semaphore = new Semaphore(1);
+		try {
+			semaphore.acquire();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
 		if(Events.containsKey(type)){
 			Events.get(type).add(m);
 		}
-		else{
+		else{// if another thread has created a new queue for this event type, we will overwrite it here
 			ConcurrentLinkedQueue<MicroService> newQ = new ConcurrentLinkedQueue<>();
 			newQ.add(m);
 			Events.put(type, newQ);
 		}
+		semaphore.release();
 
 	}
 
@@ -65,7 +72,8 @@ public class MessageBusImpl implements MessageBus {
 
 	@Override
 	public <T> void complete(Event<T> e, T result) {
-		FuturesMap.get(e).resolve(result);
+		Future fut = FuturesMap.get(e);
+		fut.resolve(result);
 	}
 
 	@Override
@@ -99,7 +107,7 @@ public class MessageBusImpl implements MessageBus {
 			service = queue.poll();
 			queue.add(service);
 			microServices.get(service).add(e);
-			microServices.notifyAll(); // here? TODO  check this
+	///		microServices.notifyAll(); // here? TODO  check this
 			fut = new Future<T>();
 			FuturesMap.put(e, fut);
 		}

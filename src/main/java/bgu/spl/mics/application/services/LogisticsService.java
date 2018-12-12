@@ -8,6 +8,9 @@ import bgu.spl.mics.application.messages.FreeVehicleEvent;
 import bgu.spl.mics.application.messages.TickBroadcast;
 import bgu.spl.mics.application.passiveObjects.DeliveryVehicle;
 
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Semaphore;
+
 /**
  * Logistic service in charge of delivering books that have been purchased to customers.
  * Handles {@link DeliveryEvent}.
@@ -21,21 +24,30 @@ public class LogisticsService extends MicroService {
 
 	public LogisticsService(String name) {
 		super(name);
+
 	}
 
 	@Override
 	protected void initialize() {
 		subscribeBroadcast(TickBroadcast.class, clock -> {
 			if (clock.getTimeOfDeath() == clock.giveMeSomeTime()) {
+				int ia; // todo
 				terminate();
 			}
 		});
+		Semaphore locker = new Semaphore(1);
+		try {
+			locker.acquire();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
 		subscribeEvent(DeliveryEvent.class, delivery ->{
 			Future<Future<DeliveryVehicle>> FutureDeliveryVehicleFuture = sendEvent(new AcquireVehicleEvent(delivery.getDistance(), delivery.getAddress()));
 			FutureDeliveryVehicleFuture.get().get().deliver(delivery.getAddress(), delivery.getDistance());
 			complete(delivery, true);
 			sendEvent(new FreeVehicleEvent(FutureDeliveryVehicleFuture.get().get()));
 		});
+		locker.release();
 
 	}
 

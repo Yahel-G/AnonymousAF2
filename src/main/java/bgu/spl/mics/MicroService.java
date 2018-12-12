@@ -1,4 +1,7 @@
 package bgu.spl.mics;
+
+import bgu.spl.mics.application.BookStoreRunner;
+
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -26,6 +29,7 @@ public abstract class MicroService implements Runnable {
     private MessageBus daBus;
     private ConcurrentHashMap <Class <? extends Message> , Callback> callbackMap;
     private ConcurrentHashMap<Message, Future> FuturesMap;
+
     /**
      * @param name the micro-service name (used mainly for debugging purposes -
      *             does not have to be unique)
@@ -127,8 +131,8 @@ public abstract class MicroService implements Runnable {
      */
     protected final <T> void complete(Event<T> e, T result) {
         daBus.complete(e , result);
-        FuturesMap.get(e).resolve(result);
-        callbackMap.get(e).call(e);
+//        FuturesMap.get(e).resolve(result);
+//        callbackMap.get(e).call(e);
 
     }
 
@@ -159,8 +163,10 @@ public abstract class MicroService implements Runnable {
      */
     @Override
     public final void run() {
+
         daBus.register(this);
         initialize();
+        BookStoreRunner.latch.countDown();
         while (!terminated) {
             Message daMsg;
             try {

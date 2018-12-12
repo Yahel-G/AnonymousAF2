@@ -2,13 +2,17 @@ package bgu.spl.mics.application;
 
 import bgu.spl.mics.application.passiveObjects.*;
 import bgu.spl.mics.application.services.*;
-import com.google.gson.*;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 
 import java.io.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Scanner;
 import java.util.Vector;
+import java.util.concurrent.CountDownLatch;
 
 /** This is the Main class of the application. You should parse the input file,
  * create the different instances of the objects, and run the system.
@@ -32,7 +36,7 @@ public class BookStoreRunner implements Serializable {
     private static String receiptOutput;
     private static String registerOutput;
     private static HashMap<Integer, Customer> customersForPrinting;
-
+    public static CountDownLatch latch;
 
     public static void main(String[] args) {
         inventory = Inventory.getInstance();
@@ -68,15 +72,25 @@ public class BookStoreRunner implements Serializable {
             runnables.add(resourceServices.elementAt(i));
         }
 
+
+
         for (Runnable r : runnables) {
             Threads.add(new Thread(r));
         }
         for (Thread t : Threads) {
             t.start();
         }
+
+
+        try {
+            latch.await();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
         Thread TS = new Thread(timeService);
         TS.start();
-        try {
+        try {   // joining so we won't print stuff before the threads finished running
             TS.join();
         } catch (InterruptedException e) {
             e.printStackTrace();
@@ -87,12 +101,49 @@ public class BookStoreRunner implements Serializable {
         moneyRegister.printReceipts(receiptOutput);
         moneyRegister.printToFile(registerOutput);
         printCustomers(customerOutput);
+
+        //TODO: Delete!!!!!!
+        ObjectInputStream input = null;
+        try {
+
+            FileInputStream stream = new FileInputStream("a");
+            input = new ObjectInputStream(stream);
+            Object CustomerPrint =  input.readObject();
+
+            FileInputStream stream2 = new FileInputStream("b");
+            input = new ObjectInputStream(stream2);
+            Object BooksPrint =  input.readObject();
+
+            FileInputStream stream3 = new FileInputStream("c");
+            input = new ObjectInputStream(stream3);
+            Object ReceiptPrint =  input.readObject();
+
+            FileInputStream stream4 = new FileInputStream("d");
+            input = new ObjectInputStream(stream4);
+            Object MoneyRegPrint = input.readObject();
+            int helloooooooooooooooooooooo = 17;
+        } catch (FileNotFoundException ex) {
+        }
+        catch (IOException ex2){}
+        catch (ClassNotFoundException ex3){}
+        finally {
+            if (input != null){
+                try {
+                    input.close();
+                }catch (IOException e){}
+            }
+        }
+        //TODO: End Delete
+
     }
+
+
+
 
     private static void GsonParser() {
         JsonParser Parser = new JsonParser();
         InputStream inputStream = null;
-        System.out.println("Please enter the jason input and output files: input, output(Customer, Books, Receipts, MoneyRegister...");
+        System.out.println("Please enter the json input and output files: input, output(Customer, Books, Receipts, MoneyRegister...");
         Scanner scanner = new Scanner(System.in);
         String inputFile = scanner.next();
         customerOutput = scanner.next();
@@ -105,7 +156,7 @@ public class BookStoreRunner implements Serializable {
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
-        try {
+        try {// todo why twice?
             inputStream = new FileInputStream(inputFile); // input.json
         } catch (FileNotFoundException e) {
             e.printStackTrace();
@@ -166,7 +217,18 @@ public class BookStoreRunner implements Serializable {
 
         inventory.load(booksInventory);
         resourcesHolder.load(vehicles);
+
+        int NumOfServicesExceptTime = numOfSelling + numOfInventory + numOfLogistics + numOfResources + customersInput.size();
+
+        initialize(numOfSelling, numOfInventory, numOfLogistics, numOfResources, customers, NumOfServicesExceptTime, timeSpeed, timeDuration);
+
+
+    } // end GsonParser
+
+    private static void initialize(int numOfSelling, int numOfInventory, int numOfLogistics, int numOfResources, HashMap<Customer, List<OrderPair>> customers, int NumOfServicesExceptTime, int timeSpeed, int timeDuration){
+        latch = new CountDownLatch(NumOfServicesExceptTime);
         timeService = new TimeService(timeSpeed, timeDuration); //BigBen?
+
         int i;
         String name;
         for (i = 0; i < numOfSelling; i++) {
@@ -189,8 +251,8 @@ public class BookStoreRunner implements Serializable {
             customersArray.add(it.getKey());
             APIServices.add(new APIService(it.getKey().getName(), it.getKey(), it.getValue()));
         }
+    }
 
-    } // end GsonParser
 
     public static void printCustomers(String filename) {
         try {

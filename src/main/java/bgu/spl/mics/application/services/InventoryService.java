@@ -8,6 +8,7 @@ import bgu.spl.mics.application.passiveObjects.Inventory;
 import bgu.spl.mics.application.passiveObjects.OrderReceipt;
 import bgu.spl.mics.application.passiveObjects.OrderResult;
 
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Semaphore;
 
 /**
@@ -23,15 +24,18 @@ import java.util.concurrent.Semaphore;
 public class InventoryService extends MicroService{
 	private Inventory inventory = null;
 
+
 	public InventoryService(String name) {
 		super(name);
-		inventory.getInstance();
+		inventory = Inventory.getInstance();
+
 	}
 
 	@Override
 	protected void initialize() {
 		subscribeBroadcast(TickBroadcast.class, clock -> {
 			if (clock.getTimeOfDeath() == clock.giveMeSomeTime()) {
+				int ia; //todo delete
 				terminate();
 			}
 		});
@@ -63,6 +67,7 @@ public class InventoryService extends MicroService{
 			}
 			locker.release();
 		});
+
 
 	}
 }

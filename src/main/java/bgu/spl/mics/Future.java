@@ -34,7 +34,10 @@ public class Future<T> {
 		while (!isDone()) {
 			try {
 				this.wait();
-			} catch (InterruptedException e) {}
+			} catch (InterruptedException e) {	// todo thread never dies because it catches the interrupt exception
+				// e.printStackTrace();
+				return null;
+			}
 		}
 		return daResult;
 	}
@@ -46,8 +49,9 @@ public class Future<T> {
 	public void resolve (T result) {
 		daResult = result;
 		done = true;
-		this.notifyAll();
-	}
+		synchronized(this) {
+			this.notifyAll();
+		}	}
 	
 	/**
      * @return true if this object has been resolved, false otherwise

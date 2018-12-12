@@ -8,6 +8,7 @@ import bgu.spl.mics.application.passiveObjects.MoneyRegister;
 import bgu.spl.mics.application.passiveObjects.OrderReceipt;
 import bgu.spl.mics.application.passiveObjects.OrderResult;
 
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Semaphore;
 
 /**
@@ -28,13 +29,14 @@ public class SellingService extends MicroService{
 
 	public SellingService(String name) {
 		super(name);
-		moneyRegister.getInstance();
+		moneyRegister = MoneyRegister.getInstance();
 	}
 
 	@Override
 	protected void initialize() {
 		subscribeBroadcast(TickBroadcast.class, time->{
 			if (time.getTimeOfDeath() == time.giveMeSomeTime()) {
+				int ia = 1;//todo
 				terminate();
 			}
 			theTimeNow = time.giveMeSomeTime();
@@ -58,15 +60,16 @@ public class SellingService extends MicroService{
 					Future<OrderResult> orderResultFuture = sendEvent(new TakeBookEvent(bookTitle));
 					if (orderResultFuture.get() == OrderResult.SUCCESSFULLY_TAKEN){
 						moneyRegister.chargeCreditCard(customer, price);
-						locker.release();
+				//		locker.release();
 						sendEvent(new DeliveryEvent(customer.getDistance(), customer.getAddress()));
 						complete(seller, new OrderReceipt(customer.getId(), getName(), bookTitle, price, theTimeNow, seller.getOrderedTick(), processedTick));
 					}
 					else{
 						complete(seller, null); // is this necessary? if it is, need to add more of these here maybe.
-						locker.release();
+			//			locker.release();
 					}
 				}
+					locker.release();
 
 			}
 		});

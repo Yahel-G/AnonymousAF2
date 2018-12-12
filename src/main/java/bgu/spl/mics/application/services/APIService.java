@@ -11,6 +11,7 @@ import bgu.spl.mics.application.passiveObjects.OrderReceipt;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Vector;
+import java.util.concurrent.CountDownLatch;
 
 /**
  * APIService is in charge of the connection between a client and the store.
@@ -36,7 +37,7 @@ public class APIService extends MicroService{
 	private Vector<Future<OrderReceipt>> futReceipts;
 	private Vector<OrderReceipt> actualReceipts;
 
-	public APIService(String name ,Customer customer, List<OrderPair> orderSchedule) {
+	public APIService(String name , Customer customer, List<OrderPair> orderSchedule) {
 		super(name);
 		daCustomer = customer;
 		theTime = -1;
@@ -81,6 +82,7 @@ public class APIService extends MicroService{
 			}
 
 		}); // end callback
+
 	}
 
 }
