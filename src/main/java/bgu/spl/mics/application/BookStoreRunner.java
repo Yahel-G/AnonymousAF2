@@ -29,7 +29,6 @@ public class BookStoreRunner {
 
 
     public static void main(String[] args) {
-
         Vector<Runnable> runnables = new Vector<>();
         APIServices = new Vector<>();
         customersArray = new Vector<>();
@@ -40,51 +39,72 @@ public class BookStoreRunner {
         resourceServices = new Vector<>();
 
         GsonParser();
-
-
-        for (int i = 0; i< APIServices.size(); i++){
+        for (int i = 0; i < APIServices.size(); i++) {
             runnables.add(APIServices.elementAt(i));
         }
-        for (int i = 0; i< inventoryServices.size(); i++){
+        for (int i = 0; i < inventoryServices.size(); i++) {
             runnables.add(inventoryServices.elementAt(i));
         }
-        for (int i = 0; i< sellingServices.size(); i++){
+        for (int i = 0; i < sellingServices.size(); i++) {
             runnables.add(sellingServices.elementAt(i));
         }
-        for (int i = 0; i< logisticsServices.size(); i++){
+        for (int i = 0; i < logisticsServices.size(); i++) {
             runnables.add(logisticsServices.elementAt(i));
         }
-        for (int i = 0; i< resourceServices.size(); i++){
+        for (int i = 0; i < resourceServices.size(); i++) {
             runnables.add(resourceServices.elementAt(i));
         }
         runnables.add(timeService);
 
-        for(Runnable r: runnables){
+        for (Runnable r : runnables) {
             Threads.add(new Thread(r));
         }
-        for (Thread t: Threads){
-                t.start();
+        for (Thread t : Threads) {
+            t.start();
+        }
+        //TODO: Delete!!!!!!
+        ObjectInputStream input = null;
+        try {
+
+            FileInputStream stream = new FileInputStream(args[1]);
+            input = new ObjectInputStream(stream);
+            HashMap<Integer, Customer> CustomerPrint = (HashMap<Integer, Customer>) input.readObject();
+
+            FileInputStream stream2 = new FileInputStream(args[2]);
+            input = new ObjectInputStream(stream2);
+            HashMap<String,Integer> BooksPrint = (HashMap<String,Integer>) input.readObject();
+
+            FileInputStream stream3 = new FileInputStream(args[3]);
+            input = new ObjectInputStream(stream3);
+           List<OrderReceipt> ReceiptPrint = (List<OrderReceipt>) input.readObject();
+
+            FileInputStream stream4 = new FileInputStream(args[4]);
+            input = new ObjectInputStream(stream4);
+            MoneyRegister MoneyRegPrint = (MoneyRegister) input.readObject();
+        } catch (FileNotFoundException ex) {
+        }
+        catch (IOException ex2){}
+        catch (ClassNotFoundException ex3){}
+        finally {
+            if (input != null){
+                try {
+                    input.close();
+                }catch (IOException e){}
+            }
         }
     }
 
     private static void GsonParser(){
         JsonParser Parser = new JsonParser();
         InputStream inputStream = null;
-        System.out.println("Please enter the jason input file only...");
+        System.out.println("Please enter the jason input and output files: input, output(Customer, Books, Receipts, MoneyRegister...");
         Scanner scanner = new Scanner(System.in);
-        String inputFile = scanner.nextLine();
-        System.out.println("Please enter the Customer output file only...");
-        scanner = new Scanner(System.in);
-        String CustomerOutput = scanner.nextLine();
-        System.out.println("Please enter the books output file only...");
-        scanner = new Scanner(System.in);
-        String booksOutput = scanner.nextLine();
-        System.out.println("Please enter the receipt output file only...");
-        scanner = new Scanner(System.in);
-        String receiptOutput = scanner.nextLine();
-        System.out.println("Please enter the register output file only...");
-        scanner = new Scanner(System.in);
-        String registerOutput = scanner.nextLine();
+        String inputFile = scanner.next();
+        String customerOutput = scanner.next();
+        String booksOutput = scanner.next();
+        String receiptOutput = scanner.next();
+        String registerOutput = scanner.next();
+
         try {
             inputStream = new FileInputStream(inputFile); // input.json
         } catch (FileNotFoundException e) {
@@ -169,4 +189,16 @@ public class BookStoreRunner {
         moneyRegister = moneyRegister.getInstance();
 
     } // end GsonParser
+
+    public void printCustomer (String filename){
+        try {
+        FileOutputStream file = new FileOutputStream(filename);
+        ObjectOutputStream oos = new ObjectOutputStream(file);
+        oos.writeObject(customersForPrinting);
+        oos.close();
+        file.close();
+        } catch (IOException ioe) {
+           ioe.printStackTrace();
+        }
+    }
 }
