@@ -49,7 +49,6 @@ public class BookStoreRunner implements Serializable {
         APIServices = new Vector<>();
         customersArray = new Vector<>();
         inventoryServices = new Vector<>();
-        inventoryServices = new Vector<>();
         sellingServices = new Vector<>();
         logisticsServices = new Vector<>();
         resourceServices = new Vector<>();
