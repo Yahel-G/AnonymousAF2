@@ -49,9 +49,10 @@ public class ResourceService extends MicroService{
 		subscribeEvent(AcquireVehicleEvent.class, getTaxi->{
 			System.out.println(getName() + " has received an AcquireVehicleEvent"); // todo remove
 			Future<DeliveryVehicle> taxi = holder.acquireVehicle();
-			if (taxi.get() != null){
+			//if (!taxi.isDone())
+			//	.get() != null){ // deadlock because the service may wait for get() with no 1 to free a vehicle
 				complete(getTaxi, taxi);
-			}
+		//	}
 		});
 //		locker.release();
 
