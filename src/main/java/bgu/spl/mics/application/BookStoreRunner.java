@@ -2,43 +2,63 @@ package bgu.spl.mics.application;
 
 import bgu.spl.mics.application.passiveObjects.*;
 import bgu.spl.mics.application.services.*;
-import com.google.gson.*;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 
 import java.io.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Scanner;
 import java.util.Vector;
+import java.util.concurrent.CountDownLatch;
 
 /** This is the Main class of the application. You should parse the input file,
  * create the different instances of the objects, and run the system.
  * In the end, you should output serialized objects.
  */
-public class BookStoreRunner {
-        public static Vector<Thread> Threads = new Vector<>();
-        public static TimeService timeService = null; //Changed
-        public static Vector<APIService> APIServices = null; // Changed
-        public static Vector<Customer> customersArray = null; //Changed
-        public static Vector<InventoryService> inventoryServices = null; //Changed
-        public static Vector<SellingService> sellingServices = null;//Changed
-        public static Vector<LogisticsService> logisticsServices = null;//Changed
-        public static Vector<ResourceService> resourceServices = null;//Changed
-        public static Inventory inventory = null;//Changed
-        public static ResourcesHolder resourcesHolder = null;//Changed
-        public static MoneyRegister moneyRegister = null;//changed
+public class BookStoreRunner implements Serializable {
+    private static Vector<Thread> Threads = new Vector<>();
+    private static TimeService timeService = null;
+    private static Vector<APIService> APIServices = null;
+    private static Vector<Customer> customersArray = null;
+    private static Vector<InventoryService> inventoryServices = null;
+    private static Vector<SellingService> sellingServices = null;
+    private static Vector<LogisticsService> logisticsServices = null;
+    private static Vector<ResourceService> resourceServices = null;
+    public static Inventory inventory = null;
+    private static ResourcesHolder resourcesHolder = null;
+    private static MoneyRegister moneyRegister = null;
+
+    private static String customerOutput;
+    private static String booksOutput;
+    private static String receiptOutput;
+    private static String registerOutput;
+    private static HashMap<Integer, Customer> customersForPrinting;
+    public static CountDownLatch latch; // use to make sure no thread miss the first tick. ? is it?
+    public static CountDownLatch latch2; // use to call the termination process. ? is it?
 
 
     public static void main(String[] args) {
+        // initializing the passive singletons.
+        inventory = Inventory.getInstance();
+        resourcesHolder = ResourcesHolder.getInstance();
+        moneyRegister = MoneyRegister.getInstance();
+
+        // initializing space to hold the input data.
         Vector<Runnable> runnables = new Vector<>();
         APIServices = new Vector<>();
         customersArray = new Vector<>();
         inventoryServices = new Vector<>();
-        inventoryServices = new Vector<>();
         sellingServices = new Vector<>();
         logisticsServices = new Vector<>();
         resourceServices = new Vector<>();
+        customersForPrinting = new HashMap<>();
 
         GsonParser();
+
+
         for (int i = 0; i < APIServices.size(); i++) {
             runnables.add(APIServices.elementAt(i));
         }
@@ -54,7 +74,6 @@ public class BookStoreRunner {
         for (int i = 0; i < resourceServices.size(); i++) {
             runnables.add(resourceServices.elementAt(i));
         }
-        runnables.add(timeService);
 
         for (Runnable r : runnables) {
             Threads.add(new Thread(r));
@@ -62,27 +81,47 @@ public class BookStoreRunner {
         for (Thread t : Threads) {
             t.start();
         }
+
+        Thread TS = new Thread(timeService);
+        TS.start();
+
+
+
+        try {
+            latch2.await();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+
+
+        inventory.printToFile(booksOutput);
+        moneyRegister.printReceipts(receiptOutput);
+        moneyRegister.printToFile(registerOutput);
+        printCustomers(customerOutput);
+
         //TODO: Delete!!!!!!
         ObjectInputStream input = null;
         try {
 
-            FileInputStream stream = new FileInputStream(args[1]);
+            FileInputStream stream = new FileInputStream("a");
             input = new ObjectInputStream(stream);
-            HashMap<Integer, Customer> CustomerPrint = (HashMap<Integer, Customer>) input.readObject();
+            Object CustomerPrint =  input.readObject();
 
-            FileInputStream stream2 = new FileInputStream(args[2]);
+            FileInputStream stream2 = new FileInputStream("b");
             input = new ObjectInputStream(stream2);
-            HashMap<String,Integer> BooksPrint = (HashMap<String,Integer>) input.readObject();
+            Object BooksPrint =  input.readObject();
 
-            FileInputStream stream3 = new FileInputStream(args[3]);
+            FileInputStream stream3 = new FileInputStream("c");
             input = new ObjectInputStream(stream3);
-           List<OrderReceipt> ReceiptPrint = (List<OrderReceipt>) input.readObject();
+            Object ReceiptPrint =  input.readObject();
 
-            FileInputStream stream4 = new FileInputStream(args[4]);
+            FileInputStream stream4 = new FileInputStream("d");
             input = new ObjectInputStream(stream4);
-            MoneyRegister MoneyRegPrint = (MoneyRegister) input.readObject();
-        } catch (FileNotFoundException ex) {
+            Object MoneyRegPrint = input.readObject();
+            int helloooooooooooooooooooooo = 17;
         }
+        catch (FileNotFoundException ex) {}
         catch (IOException ex2){}
         catch (ClassNotFoundException ex3){}
         finally {
@@ -92,48 +131,26 @@ public class BookStoreRunner {
                 }catch (IOException e){}
             }
         }
+        //TODO: End Delete
+
     }
 
-    private static void GsonParser(){
-        JsonParser Parser = new JsonParser();
-        InputStream inputStream = null;
-        System.out.println("Please enter the jason input and output files: input, output(Customer, Books, Receipts, MoneyRegister...");
-        Scanner scanner = new Scanner(System.in);
-        String inputFile = scanner.next();
-        String customerOutput = scanner.next();
-        String booksOutput = scanner.next();
-        String receiptOutput = scanner.next();
-        String registerOutput = scanner.next();
 
-        try {
-            inputStream = new FileInputStream(inputFile); // input.json
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
+
+
+    private static void GsonParser() {
+        JsonParser Parser = new JsonParser();
+
+        InputStream inputStream = inputReaderFun(); ;
+
         Reader reader = new InputStreamReader(inputStream);
         JsonElement rootElement = Parser.parse(reader);
         JsonObject rootObject = rootElement.getAsJsonObject();
-        JsonArray initialInventory = rootObject.getAsJsonArray("initialInventory");
-        BookInventoryInfo[] booksInventory = new BookInventoryInfo[initialInventory.size()];
-        int index = 0;
-        for (JsonElement bookInfo: initialInventory){
-            booksInventory[index] = new BookInventoryInfo(bookInfo.getAsJsonObject().getAsJsonPrimitive("bookTitle").getAsString(),
-                    bookInfo.getAsJsonObject().getAsJsonPrimitive("amount").getAsInt(),
-                    bookInfo.getAsJsonObject().getAsJsonPrimitive("price").getAsInt());
-            index++;
-        }
-        index = 0;
-        JsonArray initialResources = rootObject.getAsJsonArray("initialResources");
-        DeliveryVehicle[] vehicles = null;
-        for (JsonElement item: initialResources){ // in case the input consists of several arrays of vehicles
-            JsonArray vehiclesInput = item.getAsJsonObject().getAsJsonArray("vehicles");
-            vehicles = new DeliveryVehicle[vehiclesInput.size()];
-            for(JsonElement aVhicle: vehiclesInput){
-                vehicles[index] = new DeliveryVehicle(aVhicle.getAsJsonObject().getAsJsonPrimitive("license").getAsInt(),
-                        aVhicle.getAsJsonObject().getAsJsonPrimitive("speed").getAsInt());
-                index++;
-            }
-        }
+        initialInventoryFun(rootObject);
+
+        initialResourcesFun(rootObject);
+
+
         JsonObject servicesInput = rootObject.getAsJsonObject("services");
         JsonObject timeInput = servicesInput.getAsJsonObject("time");
         int timeSpeed = timeInput.get("speed").getAsInt();
@@ -144,61 +161,125 @@ public class BookStoreRunner {
         int numOfResources = servicesInput.get("resourcesService").getAsInt();
 
         JsonArray customersInput = servicesInput.getAsJsonArray("customers");
+        HashMap<Customer, List<OrderPair>> customers = customersBuilderFun(customersInput);
+
+         int NumOfServicesExceptTime = numOfSelling + numOfInventory + numOfLogistics + numOfResources + customersInput.size();
+
+        initialize(numOfSelling, numOfInventory, numOfLogistics, numOfResources, customers, NumOfServicesExceptTime, timeSpeed, timeDuration);
+    } // end GsonParser
+
+    private static void initialize(int numOfSelling, int numOfInventory, int numOfLogistics, int numOfResources, HashMap<Customer, List<OrderPair>> customers, int NumOfServicesExceptTime, int timeSpeed, int timeDuration){
+        latch = new CountDownLatch(NumOfServicesExceptTime);
+        latch2 = new CountDownLatch(NumOfServicesExceptTime+1);
+        System.out.println(Integer.toString(NumOfServicesExceptTime+1) + " services should initialize"); // todo remove
+
+
+        timeService = new TimeService(timeSpeed, timeDuration); //BigBen?
+
+        int i;
+        String name;
+        for (i = 0; i < numOfSelling; i++) {
+            name = "Selling Service " + Integer.toString(i);
+            sellingServices.add(new SellingService(name));
+        }
+        for (i = 0; i < numOfInventory; i++) {
+            name = "Inventory Service " + Integer.toString(i);
+            inventoryServices.add(new InventoryService(name));
+        }
+        for (i = 0; i < numOfLogistics; i++) {
+            name = "Logistics Service  " + Integer.toString(i);
+            logisticsServices.add(new LogisticsService(name));
+        }
+        for (i = 0; i < numOfResources; i++) {
+            name = "Resource Service " + Integer.toString(i);
+            resourceServices.add(new ResourceService(name));
+        }
+        for (HashMap.Entry<Customer, List<OrderPair>> it : customers.entrySet()) {
+            customersArray.add(it.getKey());
+            APIServices.add(new APIService(it.getKey().getName(), it.getKey(), it.getValue()));
+        }
+    }
+
+
+    public static void printCustomers(String filename) {
+        try {
+            FileOutputStream file = new FileOutputStream(filename);
+            ObjectOutputStream oos = new ObjectOutputStream(file);
+            oos.writeObject(customersForPrinting);
+            oos.close();
+            file.close();
+        } catch (IOException ioe) {
+            ioe.printStackTrace();
+        }
+    }
+
+
+
+    private static InputStream inputReaderFun(){
+        InputStream inputStream = null;
+        System.out.println("Please enter the json input and output files: input, output(Customer, Books, Receipts, MoneyRegister...");
+        Scanner scanner = new Scanner(System.in);
+        String inputFile = scanner.next();
+        customerOutput = scanner.next();
+        booksOutput = scanner.next();
+        receiptOutput = scanner.next();
+        registerOutput = scanner.next();
+
+        try {
+            inputStream = new FileInputStream(inputFile); // input.json
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+        return inputStream;
+    }
+    private static void initialInventoryFun(JsonObject rootObject){
+        int index = 0;
+        JsonArray initialInventory = rootObject.getAsJsonArray("initialInventory");
+        BookInventoryInfo[] booksInventory = new BookInventoryInfo[initialInventory.size()];
+        for (JsonElement bookInfo : initialInventory) {
+            booksInventory[index] = new BookInventoryInfo(bookInfo.getAsJsonObject().getAsJsonPrimitive("bookTitle").getAsString(),
+                    bookInfo.getAsJsonObject().getAsJsonPrimitive("amount").getAsInt(),
+                    bookInfo.getAsJsonObject().getAsJsonPrimitive("price").getAsInt());
+            index++;
+        }
+        inventory.load(booksInventory);
+    }
+    private static void initialResourcesFun(JsonObject rootObject){
+        int index = 0;
+        JsonArray initialResources = rootObject.getAsJsonArray("initialResources");
+        DeliveryVehicle[] vehicles = null;
+        for (JsonElement item : initialResources) { // in case the input consists of several arrays of vehicles
+            JsonArray vehiclesInput = item.getAsJsonObject().getAsJsonArray("vehicles");
+            vehicles = new DeliveryVehicle[vehiclesInput.size()];
+            for (JsonElement aVhicle : vehiclesInput) {
+                vehicles[index] = new DeliveryVehicle(aVhicle.getAsJsonObject().getAsJsonPrimitive("license").getAsInt(),
+                        aVhicle.getAsJsonObject().getAsJsonPrimitive("speed").getAsInt());
+                index++;
+            }
+        }
+        resourcesHolder.load(vehicles);
+    }
+    private static HashMap customersBuilderFun(JsonArray customersInput){
         HashMap<Customer, List<OrderPair>> customers = new HashMap<>();
-        for(JsonElement customer: customersInput){
+
+        for (JsonElement customer : customersInput) {
             Customer tempCust = new Customer(customer.getAsJsonObject().getAsJsonPrimitive("id").getAsInt(),
                     customer.getAsJsonObject().getAsJsonPrimitive("name").getAsString(),
                     customer.getAsJsonObject().getAsJsonPrimitive("address").getAsString(),
                     customer.getAsJsonObject().getAsJsonPrimitive("distance").getAsInt(),
                     customer.getAsJsonObject().getAsJsonObject("creditCard").getAsJsonObject().get("number").getAsInt(),
                     customer.getAsJsonObject().getAsJsonObject("creditCard").getAsJsonObject().get("amount").getAsInt());
+            customersForPrinting.put(tempCust.getId(), tempCust);
             List<OrderPair> tempSchedule = new Vector<>();
             JsonArray schedules = customer.getAsJsonObject().getAsJsonArray("orderSchedule");
-            for(JsonElement schedule: schedules){
+            for (JsonElement schedule : schedules) {
                 tempSchedule.add(new OrderPair(schedule.getAsJsonObject().get("tick").getAsInt(),
                         schedule.getAsJsonObject().get("bookTitle").getAsString()));
             }
             customers.put(tempCust, tempSchedule);
         }
-
-        inventory.getInstance().load(booksInventory);
-        resourcesHolder.getInstance().load(vehicles);
-        timeService = new TimeService(timeSpeed,timeDuration); //BigBen?
-        int i;
-        String name;
-        for(i = 0 ; i < numOfSelling ; i++){
-            name = "Sell "+ Integer.toString(i);
-            sellingServices.add(new SellingService(name));
-        }
-        for(i = 0 ; i < numOfInventory ; i++){
-            name = "Inv "+ Integer.toString(i);
-            inventoryServices.add(new InventoryService(name));
-        }
-        for(i = 0 ; i < numOfLogistics ; i++){
-            name = "Log "+ Integer.toString(i);
-            logisticsServices.add(new LogisticsService(name));
-        }
-        for(i = 0 ; i < numOfResources ; i++){
-            name = "Res "+ Integer.toString(i);
-            resourceServices.add(new ResourceService(name));
-        }
-        for(HashMap.Entry<Customer, List<OrderPair>> it: customers.entrySet()){
-            customersArray.add(it.getKey());
-            APIServices.add(new APIService(it.getKey().getName(), it.getKey(), it.getValue()));
-        }
-        moneyRegister = moneyRegister.getInstance();
-
-    } // end GsonParser
-
-    public void printCustomer (String filename){
-        try {
-        FileOutputStream file = new FileOutputStream(filename);
-        ObjectOutputStream oos = new ObjectOutputStream(file);
-        oos.writeObject(customersForPrinting);
-        oos.close();
-        file.close();
-        } catch (IOException ioe) {
-           ioe.printStackTrace();
-        }
+        return customers;
     }
 }
+
+
