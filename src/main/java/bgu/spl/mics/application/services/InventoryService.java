@@ -37,6 +37,8 @@ public class InventoryService extends MicroService{
 		System.out.println(getName() + " has initialized"); // todo remove
 
 		subscribeBroadcast(TickBroadcast.class, clock -> {
+			System.out.println(" --- Tick #" +Integer.toString(clock.giveMeSomeTime()) +"# received in service " +getName() + " ---"); // todo remove
+
 			if (clock.getTimeOfDeath() == clock.giveMeSomeTime()) {
 				terminate();
 			}

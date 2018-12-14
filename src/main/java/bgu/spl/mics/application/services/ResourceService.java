@@ -22,7 +22,9 @@ import java.util.concurrent.Semaphore;
  */
 public class ResourceService extends MicroService{
 	private ResourcesHolder holder;
-	private Semaphore locker = new Semaphore(1);
+	private Semaphore locker = new Semaphore(1, true);
+	private Semaphore locker2 = new Semaphore(1, true);
+
 
 
 	public ResourceService(String name) {
@@ -34,15 +36,16 @@ public class ResourceService extends MicroService{
 	protected void initialize() {
 		System.out.println(getName() + " has initialized"); // todo remove
 		subscribeBroadcast(TickBroadcast.class, clock -> {
+			System.out.println(" --- Tick #" +Integer.toString(clock.giveMeSomeTime()) +"# received in service " +getName() + " ---"); // todo remove
 			if (clock.getTimeOfDeath() == clock.giveMeSomeTime()) {// save the futures and and resolve all futures with null if they're not resolved
 				terminate();
 			}
 		});
-		try {
+/*		try {
 			locker.acquire();
 		} catch (InterruptedException e) {
 			e.printStackTrace();
-		}
+		}*/
 		subscribeEvent(AcquireVehicleEvent.class, getTaxi->{
 			System.out.println(getName() + " has received an AcquireVehicleEvent"); // todo remove
 			Future<DeliveryVehicle> taxi = holder.acquireVehicle();
@@ -50,19 +53,20 @@ public class ResourceService extends MicroService{
 				complete(getTaxi, taxi);
 			}
 		});
-		locker.release();
+//		locker.release();
 
-		try {
-			locker.acquire();
+/*		try {
+			locker2.acquire();
 		} catch (InterruptedException e) {
 			e.printStackTrace();
-		}
+		}*/
 		subscribeEvent(FreeVehicleEvent.class, free ->{
+			System.out.println(getName() + " has received a Free Vehicle Event"); // todo remove
 
 			holder.releaseVehicle(free.getVehicle());
 			complete(free, true);
 		});
-		locker.release();
+//		locker2.release();
 
 
 	}

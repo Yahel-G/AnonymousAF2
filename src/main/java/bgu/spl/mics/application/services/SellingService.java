@@ -37,6 +37,9 @@ public class SellingService extends MicroService{
 	protected void initialize() {
 		System.out.println(getName() + " has initialized"); // todo remove
 		subscribeBroadcast(TickBroadcast.class, time->{
+			System.out.println(" --- Tick #" +Integer.toString(time.giveMeSomeTime()) +"# received in service " +getName() + " ---"); // todo remove
+
+
 			if (time.getTimeOfDeath() == time.giveMeSomeTime()) {
 				terminate();
 			}

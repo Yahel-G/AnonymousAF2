@@ -64,6 +64,9 @@ public class APIService extends MicroService{
 	protected void initialize() {
 		System.out.println(getName() + " has initialized"); // todo remove
 		subscribeBroadcast(TickBroadcast.class, clock ->{
+			System.out.println(" --- Tick #" +Integer.toString(clock.giveMeSomeTime()) +"# received in service " +getName() + " ---"); // todo remove
+
+
 			if(clock.getTimeOfDeath() == clock.giveMeSomeTime()){
 				terminate();
 		//		System.out.println(getName() + " was terminated."); // todo is this necessary?
