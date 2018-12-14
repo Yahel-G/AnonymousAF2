@@ -3,7 +3,6 @@ package bgu.spl.mics;
 import bgu.spl.mics.application.messages.*;
 
 import java.util.Iterator;
-import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -27,6 +26,8 @@ public class MessageBusImpl implements MessageBus {
 	private ConcurrentHashMap<MicroService, LinkedBlockingQueue<Message>> microServices;
 	private ConcurrentHashMap<Message, Future> FuturesMap;
 	private ConcurrentHashMap<Class<? extends Message>, Semaphore> locks;
+	Semaphore broadcastSemaphore = new Semaphore(1, true);
+
 
 
 	// make constructor
@@ -52,7 +53,7 @@ public class MessageBusImpl implements MessageBus {
 
 	@Override
 	public <T> void subscribeEvent(Class<? extends Event<T>> type, MicroService m) {
-		Semaphore semaphore = new Semaphore(1, true);
+		Semaphore semaphore = locks.get(type);
 		try {
 			semaphore.acquire();
 		} catch (InterruptedException e) {
@@ -72,6 +73,11 @@ public class MessageBusImpl implements MessageBus {
 
 	@Override
 	public void subscribeBroadcast(Class<? extends Broadcast> type, MicroService m) {
+		try {
+			broadcastSemaphore.acquire();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
 		if(Broadcasts.containsKey(type)){
 			Broadcasts.get(type).add(m);
 		}
@@ -80,6 +86,8 @@ public class MessageBusImpl implements MessageBus {
 			newQ.add(m);
 			Broadcasts.put(type, newQ);
 		}
+		broadcastSemaphore.release();
+
 	}
 
 	@Override
@@ -161,7 +169,7 @@ public class MessageBusImpl implements MessageBus {
 			Iterator<Class <? extends Message>> it = Events.keySet().iterator();
 			while (it.hasNext()){
 				Class tmp = it.next();
-				Semaphore lock = locks.get(tmp.getClass());
+				Semaphore lock = locks.get(tmp);
 				try {
 					lock.acquire();
 				} catch (InterruptedException e) {
