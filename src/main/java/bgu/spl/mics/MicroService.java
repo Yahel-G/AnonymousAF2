@@ -147,6 +147,8 @@ public abstract class MicroService implements Runnable {
      */
     protected final void terminate() {
         this.terminated = true;
+        daBus.unregister(this);
+
     }
 
     /**
@@ -181,7 +183,7 @@ public abstract class MicroService implements Runnable {
                 e.printStackTrace();
             }
         }
-        daBus.unregister(this);
+        BookStoreRunner.latch2.countDown();
         System.out.println(getName() + " was terminated.");
     }
 

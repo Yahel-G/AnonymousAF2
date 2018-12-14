@@ -11,6 +11,7 @@ import bgu.spl.mics.application.passiveObjects.OrderReceipt;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Vector;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Semaphore;
 
@@ -35,14 +36,15 @@ public class APIService extends MicroService{
 	private Customer daCustomer;
 	private HashMap<Integer, Vector<String>> scheduler;
 	private int theTime;
-	private Vector<Future<OrderReceipt>> futReceipts;
+	private ConcurrentLinkedQueue<Future<OrderReceipt>> futReceipts;
 	private Vector<OrderReceipt> actualReceipts;
+	private Semaphore semaphore = new Semaphore(1);
 
 	public APIService(String name , Customer customer, List<OrderPair> orderSchedule) {
 		super(name);
 		daCustomer = customer;
 		theTime = -1;
-		futReceipts = new Vector<>();
+		futReceipts = new ConcurrentLinkedQueue<>();
 		actualReceipts = new Vector<>();
 		scheduler = new HashMap<>();
 		for (OrderPair OP: orderSchedule){
@@ -56,11 +58,11 @@ public class APIService extends MicroService{
 			}
 		}
 
-		initialize();
 	}
 
 	@Override
 	protected void initialize() {
+		System.out.println(getName() + " has initialized"); // todo remove
 		subscribeBroadcast(TickBroadcast.class, clock ->{
 			if(clock.getTimeOfDeath() == clock.giveMeSomeTime()){
 				terminate();
@@ -76,7 +78,6 @@ public class APIService extends MicroService{
 				}
 				scheduler.remove(theTime);	// cleanup
 			}
-			Semaphore semaphore = new Semaphore(1);
 			try {
 				semaphore.acquire(1);
 			} catch (InterruptedException e) {

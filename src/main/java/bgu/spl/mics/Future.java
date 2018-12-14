@@ -31,12 +31,13 @@ public class Future<T> {
      * 	       
      */
 	public synchronized T get() {
+
 		while (!isDone()) {
 			try {
 				this.wait();
 			} catch (InterruptedException e) {	// todo thread never dies because it catches the interrupt exception(?)
-				// e.printStackTrace();
-				return null;
+				e.printStackTrace();
+				//return null;
 			}
 		}
 		return daResult;

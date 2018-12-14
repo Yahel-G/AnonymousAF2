@@ -21,6 +21,7 @@ import java.util.concurrent.Semaphore;
  * You MAY change constructor signatures and even add new public constructors.
  */
 public class LogisticsService extends MicroService {
+	private Semaphore locker = new Semaphore(1);
 
 	public LogisticsService(String name) {
 		super(name);
@@ -29,22 +30,30 @@ public class LogisticsService extends MicroService {
 
 	@Override
 	protected void initialize() {
+		System.out.println(getName() + " has initialized"); // todo remove
+
 		subscribeBroadcast(TickBroadcast.class, clock -> {
 			if (clock.getTimeOfDeath() == clock.giveMeSomeTime()) {
 				terminate();
 			}
 		});
-		Semaphore locker = new Semaphore(1);
 		try {
 			locker.acquire();
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
 		subscribeEvent(DeliveryEvent.class, delivery ->{
-			Future<Future<DeliveryVehicle>> FutureDeliveryVehicleFuture = sendEvent(new AcquireVehicleEvent(delivery.getDistance(), delivery.getAddress()));
-			FutureDeliveryVehicleFuture.get().get().deliver(delivery.getAddress(), delivery.getDistance());
-			complete(delivery, true);
-			sendEvent(new FreeVehicleEvent(FutureDeliveryVehicleFuture.get().get()));
+			Future<Future<DeliveryVehicle>> FutureDeliveryVehicleFuture = sendEvent(new AcquireVehicleEvent());
+			DeliveryVehicle taxi = FutureDeliveryVehicleFuture.get().get();
+			if (taxi != null){
+				taxi.deliver(delivery.getAddress(), delivery.getDistance());
+				complete(delivery, true);
+				sendEvent(new FreeVehicleEvent(taxi));
+
+			}else {
+				complete(delivery, false);
+			}
+
 		});
 		locker.release();
 

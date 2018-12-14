@@ -23,6 +23,7 @@ import java.util.concurrent.Semaphore;
 
 public class InventoryService extends MicroService{
 	private Inventory inventory = null;
+	private Semaphore locker = new Semaphore(1);
 
 
 	public InventoryService(String name) {
@@ -33,6 +34,8 @@ public class InventoryService extends MicroService{
 
 	@Override
 	protected void initialize() {
+		System.out.println(getName() + " has initialized"); // todo remove
+
 		subscribeBroadcast(TickBroadcast.class, clock -> {
 			if (clock.getTimeOfDeath() == clock.giveMeSomeTime()) {
 				terminate();
@@ -40,7 +43,6 @@ public class InventoryService extends MicroService{
 		});
 
 		subscribeEvent(CheckAvailabilityEvent.class, check ->{
-			Semaphore locker = new Semaphore(1);
 			try {
 				locker.acquire();
 			} catch (InterruptedException e) {

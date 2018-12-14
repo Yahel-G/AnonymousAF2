@@ -37,6 +37,8 @@ public class BookStoreRunner implements Serializable {
     private static String registerOutput;
     private static HashMap<Integer, Customer> customersForPrinting;
     public static CountDownLatch latch;
+    public static CountDownLatch latch2;
+
 
     public static void main(String[] args) {
         inventory = Inventory.getInstance();
@@ -81,20 +83,17 @@ public class BookStoreRunner implements Serializable {
             t.start();
         }
 
-
-        try {
-            latch.await();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
         Thread TS = new Thread(timeService);
         TS.start();
-        try {   // joining so we won't print stuff before the threads finished running
-            TS.join();     // TODO: ensure TS terminates LAST (doesn't happen atm -- I THINK)
+
+
+
+        try {
+            latch2.await();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+
 
 
         inventory.printToFile(booksOutput);
@@ -227,24 +226,28 @@ public class BookStoreRunner implements Serializable {
 
     private static void initialize(int numOfSelling, int numOfInventory, int numOfLogistics, int numOfResources, HashMap<Customer, List<OrderPair>> customers, int NumOfServicesExceptTime, int timeSpeed, int timeDuration){
         latch = new CountDownLatch(NumOfServicesExceptTime);
+        latch2 = new CountDownLatch(NumOfServicesExceptTime+1);
+        System.out.println(Integer.toString(NumOfServicesExceptTime+1) + " services should initialize"); // todo remove
+
+
         timeService = new TimeService(timeSpeed, timeDuration); //BigBen?
 
         int i;
         String name;
         for (i = 0; i < numOfSelling; i++) {
-            name = "Sell " + Integer.toString(i);
+            name = "Selling Service " + Integer.toString(i);
             sellingServices.add(new SellingService(name));
         }
         for (i = 0; i < numOfInventory; i++) {
-            name = "Inv " + Integer.toString(i);
+            name = "Inventory Service " + Integer.toString(i);
             inventoryServices.add(new InventoryService(name));
         }
         for (i = 0; i < numOfLogistics; i++) {
-            name = "Log " + Integer.toString(i);
+            name = "Logistics Service  " + Integer.toString(i);
             logisticsServices.add(new LogisticsService(name));
         }
         for (i = 0; i < numOfResources; i++) {
-            name = "Res " + Integer.toString(i);
+            name = "Resource Service " + Integer.toString(i);
             resourceServices.add(new ResourceService(name));
         }
         for (HashMap.Entry<Customer, List<OrderPair>> it : customers.entrySet()) {

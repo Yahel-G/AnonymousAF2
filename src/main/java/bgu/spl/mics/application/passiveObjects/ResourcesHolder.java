@@ -48,9 +48,11 @@ public class ResourcesHolder {
      */
 	public Future<DeliveryVehicle> acquireVehicle() {
 		Future<DeliveryVehicle> ret = new Future<>();
-		waitingInLine.add(ret);
-		if(FleetAvailable.isEmpty()){
-			releaseVehicle(FleetAvailable.poll());// this is supposed to automatically wait until there's a free vehicle, right?
+		DeliveryVehicle taxi = FleetAvailable.poll();
+		if (taxi != null) {
+			ret.resolve(taxi);
+		}else {
+			waitingInLine.add(ret);
 		}
 		return ret;
 	}

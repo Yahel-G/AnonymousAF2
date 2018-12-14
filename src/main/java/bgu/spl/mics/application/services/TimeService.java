@@ -40,6 +40,8 @@ public class TimeService extends MicroService{
 				if (ticksPassed < duration) {
 					ticksPassed++;
 					sendBroadcast(new TickBroadcast(ticksPassed, duration, speed));
+					System.out.println(getName() + ": *** TICK BROADCAST: " + Integer.toString(ticksPassed) + " ***"); // todo remove
+
 				}
 			}
 		};
@@ -56,11 +58,6 @@ public class TimeService extends MicroService{
 		BigBen.start();
 		subscribeBroadcast(TickBroadcast.class, clock -> {
 			if (clock.getTimeOfDeath() == clock.giveMeSomeTime()) {
-				try { // TODO: Remove this - it's bad - no magic numbers. find another way to make sure this service terminates last
-					sleep(1500);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
 				terminate();
 			}
 		});

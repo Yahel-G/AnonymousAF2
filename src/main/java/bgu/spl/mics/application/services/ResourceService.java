@@ -22,6 +22,7 @@ import java.util.concurrent.Semaphore;
  */
 public class ResourceService extends MicroService{
 	private ResourcesHolder holder;
+	private Semaphore locker = new Semaphore(1);
 
 
 	public ResourceService(String name) {
@@ -31,26 +32,26 @@ public class ResourceService extends MicroService{
 
 	@Override
 	protected void initialize() {
+		System.out.println(getName() + " has initialized"); // todo remove
 		subscribeBroadcast(TickBroadcast.class, clock -> {
-			if (clock.getTimeOfDeath() == clock.giveMeSomeTime()) {
+			if (clock.getTimeOfDeath() == clock.giveMeSomeTime()) {// save the futures and and resolve all futures with null if they're not resolved
 				terminate();
 			}
 		});
-		Semaphore locker1 = new Semaphore(1);
 		try {
-			locker1.acquire();
+			locker.acquire();
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
 		subscribeEvent(AcquireVehicleEvent.class, getTaxi->{
+			System.out.println(getName() + " has received an AcquireVehicleEvent"); // todo remove
 			Future<DeliveryVehicle> taxi = holder.acquireVehicle();
 			if (taxi.get() != null){
 				complete(getTaxi, taxi);
 			}
 		});
-		locker1.release();
+		locker.release();
 
-		Semaphore locker = new Semaphore(1);
 		try {
 			locker.acquire();
 		} catch (InterruptedException e) {
@@ -59,6 +60,7 @@ public class ResourceService extends MicroService{
 		subscribeEvent(FreeVehicleEvent.class, free ->{
 
 			holder.releaseVehicle(free.getVehicle());
+			complete(free, true);
 		});
 		locker.release();
 
