@@ -29,7 +29,10 @@ public class OrderReceipt implements Serializable {
 		this.orderTick = orderTick;
 		this.processTick = processTick;
 	}
-
+//todo document
+	public void setOrderId(int id){
+		orderId = id;
+	}
 
 	/**
      * Retrieves the orderId of this receipt.
