@@ -2,6 +2,7 @@ package bgu.spl.mics.application.services;
 
 import bgu.spl.mics.Future;
 import bgu.spl.mics.MicroService;
+import bgu.spl.mics.application.BookStoreRunner;
 import bgu.spl.mics.application.messages.AcquireVehicleEvent;
 import bgu.spl.mics.application.messages.DeliveryEvent;
 import bgu.spl.mics.application.messages.FreeVehicleEvent;
@@ -36,6 +37,7 @@ public class LogisticsService extends MicroService {
 			System.out.println(" --- Tick #" +Integer.toString(clock.giveMeSomeTime()) +"# received in service " +getName() + " ---"); // todo remove
 
 			if (clock.getTimeOfDeath() == clock.giveMeSomeTime()) {
+				BookStoreRunner.latch2.countDown();
 				terminate();
 			}
 		});
@@ -60,6 +62,7 @@ public class LogisticsService extends MicroService {
 
 		});
 //		locker.release();
+		BookStoreRunner.latch.countDown();
 
 	}
 

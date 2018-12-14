@@ -2,6 +2,7 @@ package bgu.spl.mics.application.services;
 
 import bgu.spl.mics.Future;
 import bgu.spl.mics.MicroService;
+import bgu.spl.mics.application.BookStoreRunner;
 import bgu.spl.mics.application.messages.BookOrderEvent;
 import bgu.spl.mics.application.messages.TickBroadcast;
 import bgu.spl.mics.application.passiveObjects.Customer;
@@ -68,6 +69,7 @@ public class APIService extends MicroService{
 
 
 			if(clock.getTimeOfDeath() == clock.giveMeSomeTime()){
+				BookStoreRunner.latch2.countDown();
 				terminate();
 		//		System.out.println(getName() + " was terminated."); // todo is this necessary?
 			}
@@ -96,6 +98,7 @@ public class APIService extends MicroService{
 			semaphore.release();
 
 		}); // end callback
+		BookStoreRunner.latch.countDown();
 
 	}
 

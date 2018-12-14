@@ -1,6 +1,7 @@
 package bgu.spl.mics.application.services;
 
 import bgu.spl.mics.MicroService;
+import bgu.spl.mics.application.BookStoreRunner;
 import bgu.spl.mics.application.messages.CheckAvailabilityEvent;
 import bgu.spl.mics.application.messages.TakeBookEvent;
 import bgu.spl.mics.application.messages.TickBroadcast;
@@ -40,6 +41,7 @@ public class InventoryService extends MicroService{
 			System.out.println(" --- Tick #" +Integer.toString(clock.giveMeSomeTime()) +"# received in service " +getName() + " ---"); // todo remove
 
 			if (clock.getTimeOfDeath() == clock.giveMeSomeTime()) {
+				BookStoreRunner.latch2.countDown();
 				terminate();
 			}
 		});
@@ -72,6 +74,7 @@ public class InventoryService extends MicroService{
 			locker.release();
 		});
 
+		BookStoreRunner.latch.countDown();
 
 	}
 }

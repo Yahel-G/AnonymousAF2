@@ -58,6 +58,7 @@ public class TimeService extends MicroService{
 		BigBen.start();
 		subscribeBroadcast(TickBroadcast.class, clock -> {
 			if (clock.getTimeOfDeath() == clock.giveMeSomeTime()) {
+				BookStoreRunner.latch2.countDown();
 				terminate();
 			}
 		});

@@ -1,7 +1,5 @@
 package bgu.spl.mics;
 
-import bgu.spl.mics.application.BookStoreRunner;
-
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -168,7 +166,6 @@ public abstract class MicroService implements Runnable {
 
         daBus.register(this);
         initialize();
-        BookStoreRunner.latch.countDown();
         while (!terminated) {
             Message daMsg;
             try {
@@ -183,7 +180,6 @@ public abstract class MicroService implements Runnable {
                 e.printStackTrace();
             }
         }
-        BookStoreRunner.latch2.countDown();
         System.out.println(getName() + " was terminated.");
     }
 

@@ -1,12 +1,11 @@
 package bgu.spl.mics;
 
-import bgu.spl.mics.application.messages.*;
-
 import java.util.Iterator;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.Semaphore;
+
 
 /**
  * The {@link MessageBusImpl class is the implementation of the MessageBus interface.
@@ -37,12 +36,14 @@ public class MessageBusImpl implements MessageBus {
 		microServices = new ConcurrentHashMap<>();
 		FuturesMap = new ConcurrentHashMap<>();
 		locks = new ConcurrentHashMap<>();
+/*
 		locks.put(AcquireVehicleEvent.class, new Semaphore(1, true));
 		locks.put(BookOrderEvent.class, new Semaphore(1,true));
 		locks.put(CheckAvailabilityEvent.class, new Semaphore(1,true));
 		locks.put(DeliveryEvent.class, new Semaphore(1,true));
 		locks.put(FreeVehicleEvent.class, new Semaphore(1,true));
 		locks.put(TakeBookEvent.class, new Semaphore(1,true));
+*/
 
 	}
 
@@ -53,6 +54,7 @@ public class MessageBusImpl implements MessageBus {
 
 	@Override
 	public <T> void subscribeEvent(Class<? extends Event<T>> type, MicroService m) {
+		addLock(type);
 		Semaphore semaphore = locks.get(type);
 		try {
 			semaphore.acquire();
@@ -130,17 +132,20 @@ public class MessageBusImpl implements MessageBus {
 	
 	@Override
 	public <T> Future<T> sendEvent(Event<T> e) {
+		addLock(e.getClass());
 		Semaphore locker = locks.get(e.getClass());
 		try {
 			locker.acquire();
 		} catch (InterruptedException ex) {
 			ex.printStackTrace();
 		}
-		System.out.println("Send Event "+e.toString()+" Initiated"); //todo remove
+
+	//	System.out.println("Send Event "+e.toString()+" Initiated"); //todo remove
 		ConcurrentLinkedQueue<MicroService> queue;
-		Future<T> fut = new Future<T>(); // null?
+		Future<T> fut = null; // new Future<T>()?
 		MicroService service;
 		if(Events.get(e.getClass()) != null){
+			fut = new Future<T>();
 			FuturesMap.put(e, fut);
 			queue = Events.get(e.getClass());
 			service = queue.poll();
@@ -150,7 +155,7 @@ public class MessageBusImpl implements MessageBus {
 			System.out.println("Send Event "+e.toString()+" added to FuturesMap" + '\n' + FuturesMap.get(e).toString()); //todo remove
 
 		}
-		System.out.println("Send Event "+e.toString()+" Completed"); //todo remove
+//		System.out.println("Send Event "+e.toString()+" Completed"); //todo remove
 		locker.release();
 		return fut;
 	}
@@ -208,6 +213,11 @@ public class MessageBusImpl implements MessageBus {
 
 	}
 
-	
+    private synchronized  void addLock(Class<? extends Event>  e){
+	    if(!locks.containsKey(e)){
+            locks.put(e, new Semaphore(1,true));
+        }
+
+    }
 
 }

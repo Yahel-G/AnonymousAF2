@@ -2,6 +2,7 @@ package bgu.spl.mics.application.services;
 
 import bgu.spl.mics.Future;
 import bgu.spl.mics.MicroService;
+import bgu.spl.mics.application.BookStoreRunner;
 import bgu.spl.mics.application.messages.*;
 import bgu.spl.mics.application.passiveObjects.Customer;
 import bgu.spl.mics.application.passiveObjects.MoneyRegister;
@@ -41,6 +42,7 @@ public class SellingService extends MicroService{
 
 
 			if (time.getTimeOfDeath() == time.giveMeSomeTime()) {
+				BookStoreRunner.latch2.countDown();
 				terminate();
 			}
 			theTimeNow = time.giveMeSomeTime();
@@ -93,6 +95,7 @@ public class SellingService extends MicroService{
 			locker.release();
 
 		});
+		BookStoreRunner.latch.countDown();
 
 	}
 
