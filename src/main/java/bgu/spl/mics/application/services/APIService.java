@@ -11,6 +11,9 @@ import bgu.spl.mics.application.passiveObjects.OrderReceipt;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Vector;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Semaphore;
 
 /**
  * APIService is in charge of the connection between a client and the store.
@@ -33,14 +36,15 @@ public class APIService extends MicroService{
 	private Customer daCustomer;
 	private HashMap<Integer, Vector<String>> scheduler;
 	private int theTime;
-	private Vector<Future<OrderReceipt>> futReceipts;
+	private ConcurrentLinkedQueue<Future<OrderReceipt>> futReceipts;
 	private Vector<OrderReceipt> actualReceipts;
+	private Semaphore semaphore = new Semaphore(1);
 
-	public APIService(String name ,Customer customer, List<OrderPair> orderSchedule) {
+	public APIService(String name , Customer customer, List<OrderPair> orderSchedule) {
 		super(name);
 		daCustomer = customer;
 		theTime = -1;
-		futReceipts = new Vector<>();
+		futReceipts = new ConcurrentLinkedQueue<>();
 		actualReceipts = new Vector<>();
 		scheduler = new HashMap<>();
 		for (OrderPair OP: orderSchedule){
@@ -54,33 +58,42 @@ public class APIService extends MicroService{
 			}
 		}
 
-		initialize();
 	}
 
 	@Override
 	protected void initialize() {
+		System.out.println(getName() + " has initialized"); // todo remove
 		subscribeBroadcast(TickBroadcast.class, clock ->{
 			if(clock.getTimeOfDeath() == clock.giveMeSomeTime()){
 				terminate();
-				System.out.println(getName() + " was terminated.");
+		//		System.out.println(getName() + " was terminated."); // todo is this necessary?
 			}
 			theTime = clock.giveMeSomeTime();
 			if (scheduler.containsKey(theTime)){
 				for (String bookTitle: scheduler.get(theTime)){
 					BookOrderEvent bookEvent = new BookOrderEvent(daCustomer, bookTitle, theTime);
-					Future<OrderReceipt> receiptFuture= sendEvent(bookEvent);
+					Future<OrderReceipt> receiptFuture = sendEvent(bookEvent);
+					//receiptFuture.resolve();
 					futReceipts.add(receiptFuture);// TODO  COMPLETE FUTURE??
 				}
 				scheduler.remove(theTime);	// cleanup
 			}
+			try {
+				semaphore.acquire(1);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+
 			for (Future<OrderReceipt> futReceipt: futReceipts){
-				if(futReceipt != null){ // is this the right condition?
+				if(futReceipt.isDone()){ // is this the right condition?
 					actualReceipts.add(futReceipt.get());
 					futReceipts.remove(futReceipt);		// cleanup
 				}
 			}
+			semaphore.release();
 
 		}); // end callback
+
 	}
 
 }

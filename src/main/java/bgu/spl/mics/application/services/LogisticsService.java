@@ -8,6 +8,9 @@ import bgu.spl.mics.application.messages.FreeVehicleEvent;
 import bgu.spl.mics.application.messages.TickBroadcast;
 import bgu.spl.mics.application.passiveObjects.DeliveryVehicle;
 
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Semaphore;
+
 /**
  * Logistic service in charge of delivering books that have been purchased to customers.
  * Handles {@link DeliveryEvent}.
@@ -18,24 +21,41 @@ import bgu.spl.mics.application.passiveObjects.DeliveryVehicle;
  * You MAY change constructor signatures and even add new public constructors.
  */
 public class LogisticsService extends MicroService {
+	private Semaphore locker = new Semaphore(1);
 
 	public LogisticsService(String name) {
 		super(name);
+
 	}
 
 	@Override
 	protected void initialize() {
+		System.out.println(getName() + " has initialized"); // todo remove
+
 		subscribeBroadcast(TickBroadcast.class, clock -> {
 			if (clock.getTimeOfDeath() == clock.giveMeSomeTime()) {
 				terminate();
 			}
 		});
+		try {
+			locker.acquire();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
 		subscribeEvent(DeliveryEvent.class, delivery ->{
-			Future<Future<DeliveryVehicle>> FutureDeliveryVehicleFuture = sendEvent(new AcquireVehicleEvent(delivery.getDistance(), delivery.getAddress()));
-			FutureDeliveryVehicleFuture.get().get().deliver(delivery.getAddress(), delivery.getDistance());
-			complete(delivery, true);
-			sendEvent(new FreeVehicleEvent(FutureDeliveryVehicleFuture.get().get()));
+			Future<Future<DeliveryVehicle>> FutureDeliveryVehicleFuture = sendEvent(new AcquireVehicleEvent());
+			DeliveryVehicle taxi = FutureDeliveryVehicleFuture.get().get();
+			if (taxi != null){
+				taxi.deliver(delivery.getAddress(), delivery.getDistance());
+				complete(delivery, true);
+				sendEvent(new FreeVehicleEvent(taxi));
+
+			}else {
+				complete(delivery, false);
+			}
+
 		});
+		locker.release();
 
 	}
 

@@ -8,6 +8,7 @@ import bgu.spl.mics.application.passiveObjects.MoneyRegister;
 import bgu.spl.mics.application.passiveObjects.OrderReceipt;
 import bgu.spl.mics.application.passiveObjects.OrderResult;
 
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Semaphore;
 
 /**
@@ -25,14 +26,16 @@ public class SellingService extends MicroService{
 	private Customer customer;
 	private MoneyRegister moneyRegister;
 	private int theTimeNow;
+	private Semaphore locker = new Semaphore(1);
 
 	public SellingService(String name) {
 		super(name);
-		moneyRegister.getInstance();
+		moneyRegister = MoneyRegister.getInstance();
 	}
 
 	@Override
 	protected void initialize() {
+		System.out.println(getName() + " has initialized"); // todo remove
 		subscribeBroadcast(TickBroadcast.class, time->{
 			if (time.getTimeOfDeath() == time.giveMeSomeTime()) {
 				terminate();
@@ -42,33 +45,50 @@ public class SellingService extends MicroService{
 
 
 		subscribeEvent(BookOrderEvent.class, seller ->{
+			System.out.println(getName() + " has received a book order: " + seller.getBookTitle() +" for customer: " + seller.getCustomer().getName()); // todo remove
 			bookTitle = seller.getBookTitle();
 			customer = seller.getCustomer();
+
 			int processedTick = theTimeNow;
-			Semaphore locker = new Semaphore(1);
 			try {
 				locker.acquire();
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
+			System.out.println(getName() + " is sending a CheckAvailabilityEvent: " + bookTitle + "for customer " + customer.getName()); // todo remove
 			Future<Integer> bookPrice = sendEvent(new CheckAvailabilityEvent(bookTitle));
 			int price = bookPrice.get();
+			System.out.println(getName() + " CheckAvailabilityEvent for " + bookTitle + "Result:" + Integer.toString(price)); // todo remove
 			if (price != -1){
 				if(customer.getAvailableCreditAmount() >= price){	/// sync this
 					Future<OrderResult> orderResultFuture = sendEvent(new TakeBookEvent(bookTitle));
+					System.out.println(getName() + " is sending a TakeBookEvent: " + bookTitle); // todo remove
 					if (orderResultFuture.get() == OrderResult.SUCCESSFULLY_TAKEN){
+						System.out.println(getName() + " Successfully taken " + bookTitle); // todo remove
 						moneyRegister.chargeCreditCard(customer, price);
-						locker.release();
+				//		locker.release();
+						OrderReceipt receipt = new OrderReceipt(customer.getId(), getName(), bookTitle, price, theTimeNow, seller.getOrderedTick(), processedTick);
+						System.out.println(getName() + " produced a receipt for  " + customer.getName() + receipt.toString()); // todo remove
+						moneyRegister.file(receipt);
 						sendEvent(new DeliveryEvent(customer.getDistance(), customer.getAddress()));
-						complete(seller, new OrderReceipt(customer.getId(), getName(), bookTitle, price, theTimeNow, seller.getOrderedTick(), processedTick));
+						System.out.println(getName() + " is sending a DeliveryEvent for customer " + customer.getName()); // todo remove
+						complete(seller, receipt);
 					}
 					else{
-						complete(seller, null); // is this necessary? if it is, need to add more of these here maybe.
-						locker.release();
+						complete(seller, null);
+			//			locker.release();
 					}
+				}
+				else{
+					complete(seller, null);
 				}
 
 			}
+			else{
+				complete(seller, null);
+			}
+			locker.release();
+
 		});
 
 	}

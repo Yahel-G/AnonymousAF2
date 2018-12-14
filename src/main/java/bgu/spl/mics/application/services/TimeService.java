@@ -1,6 +1,7 @@
 package bgu.spl.mics.application.services;
 
 import bgu.spl.mics.MicroService;
+import bgu.spl.mics.application.BookStoreRunner;
 import bgu.spl.mics.application.messages.TickBroadcast;
 import bgu.spl.mics.application.passiveObjects.OrderPair;
 
@@ -8,6 +9,9 @@ import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Vector;
+import java.util.concurrent.CountDownLatch;
+
+import static java.lang.Thread.sleep;
 
 /**
  * TimeService is the global system timer There is only one instance of this micro-service.
@@ -30,12 +34,14 @@ public class TimeService extends MicroService{
 		super("The_Big_Ben");
 		this.speed = speed;
 		this.duration = duration;
-		ticksPassed = 0; // "The current time always starts from 1"
+		ticksPassed = 0;
 		ActionListener taskPerformer = new ActionListener() {
 			public void actionPerformed(ActionEvent evt) {
 				if (ticksPassed < duration) {
 					ticksPassed++;
-					sendBroadcast(new TickBroadcast(ticksPassed * speed, duration, speed));
+					sendBroadcast(new TickBroadcast(ticksPassed, duration, speed));
+					System.out.println(getName() + ": *** TICK BROADCAST: " + Integer.toString(ticksPassed) + " ***"); // todo remove
+
 				}
 			}
 		};
@@ -44,11 +50,17 @@ public class TimeService extends MicroService{
 
 	@Override
 	protected void initialize() {
+		try {
+			BookStoreRunner.latch.await();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
 		BigBen.start();
 		subscribeBroadcast(TickBroadcast.class, clock -> {
 			if (clock.getTimeOfDeath() == clock.giveMeSomeTime()) {
 				terminate();
 			}
 		});
+
 	}
 }

@@ -11,7 +11,7 @@ public class TickBroadcast implements Broadcast {
 
     public TickBroadcast(int time, int duration, int speed){
         this.time = time;
-        timeOfDeath = duration*speed;
+        timeOfDeath = duration;
     }
 
 

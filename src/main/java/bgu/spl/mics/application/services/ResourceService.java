@@ -8,6 +8,7 @@ import bgu.spl.mics.application.messages.TickBroadcast;
 import bgu.spl.mics.application.passiveObjects.DeliveryVehicle;
 import bgu.spl.mics.application.passiveObjects.ResourcesHolder;
 
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Semaphore;
 
 /**
@@ -21,34 +22,49 @@ import java.util.concurrent.Semaphore;
  */
 public class ResourceService extends MicroService{
 	private ResourcesHolder holder;
+	private Semaphore locker = new Semaphore(1);
+
+
 	public ResourceService(String name) {
 		super(name);
-		holder.getInstance();
+		holder = ResourcesHolder.getInstance();
 	}
 
 	@Override
 	protected void initialize() {
+		System.out.println(getName() + " has initialized"); // todo remove
 		subscribeBroadcast(TickBroadcast.class, clock -> {
-			if (clock.getTimeOfDeath() == clock.giveMeSomeTime()) {
+			if (clock.getTimeOfDeath() == clock.giveMeSomeTime()) {// save the futures and and resolve all futures with null if they're not resolved
 				terminate();
 			}
 		});
+		try {
+			locker.acquire();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
 		subscribeEvent(AcquireVehicleEvent.class, getTaxi->{
+			System.out.println(getName() + " has received an AcquireVehicleEvent"); // todo remove
 			Future<DeliveryVehicle> taxi = holder.acquireVehicle();
 			if (taxi.get() != null){
 				complete(getTaxi, taxi);
 			}
 		});
+		locker.release();
+
+		try {
+			locker.acquire();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
 		subscribeEvent(FreeVehicleEvent.class, free ->{
-			Semaphore locker = new Semaphore(1);
-			try {
-				locker.acquire();
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
+
 			holder.releaseVehicle(free.getVehicle());
-			locker.release();
+			complete(free, true);
 		});
+		locker.release();
+
+
 	}
 
 }
