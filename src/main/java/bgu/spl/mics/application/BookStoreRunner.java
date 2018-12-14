@@ -141,50 +141,15 @@ public class BookStoreRunner implements Serializable {
 
     private static void GsonParser() {
         JsonParser Parser = new JsonParser();
-        InputStream inputStream = null;
-        System.out.println("Please enter the json input and output files: input, output(Customer, Books, Receipts, MoneyRegister...");
-        Scanner scanner = new Scanner(System.in);
-        String inputFile = scanner.next();
-        customerOutput = scanner.next();
-        booksOutput = scanner.next();
-        receiptOutput = scanner.next();
-        registerOutput = scanner.next();
-
-        try {
-            inputStream = new FileInputStream(inputFile); // input.json
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
-        try {// todo why twice?
-            inputStream = new FileInputStream(inputFile); // input.json
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
+        InputStream inputStream = inputReaderFun();
 
         Reader reader = new InputStreamReader(inputStream);
         JsonElement rootElement = Parser.parse(reader);
         JsonObject rootObject = rootElement.getAsJsonObject();
-        JsonArray initialInventory = rootObject.getAsJsonArray("initialInventory");
-        BookInventoryInfo[] booksInventory = new BookInventoryInfo[initialInventory.size()];
-        int index = 0;
-        for (JsonElement bookInfo : initialInventory) {
-            booksInventory[index] = new BookInventoryInfo(bookInfo.getAsJsonObject().getAsJsonPrimitive("bookTitle").getAsString(),
-                    bookInfo.getAsJsonObject().getAsJsonPrimitive("amount").getAsInt(),
-                    bookInfo.getAsJsonObject().getAsJsonPrimitive("price").getAsInt());
-            index++;
-        }
-        index = 0;
-        JsonArray initialResources = rootObject.getAsJsonArray("initialResources");
-        DeliveryVehicle[] vehicles = null;
-        for (JsonElement item : initialResources) { // in case the input consists of several arrays of vehicles
-            JsonArray vehiclesInput = item.getAsJsonObject().getAsJsonArray("vehicles");
-            vehicles = new DeliveryVehicle[vehiclesInput.size()];
-            for (JsonElement aVhicle : vehiclesInput) {
-                vehicles[index] = new DeliveryVehicle(aVhicle.getAsJsonObject().getAsJsonPrimitive("license").getAsInt(),
-                        aVhicle.getAsJsonObject().getAsJsonPrimitive("speed").getAsInt());
-                index++;
-            }
-        }
+
+        initialInventoryFun(rootObject);
+        initialResourcesFun (rootObject);
+
         JsonObject servicesInput = rootObject.getAsJsonObject("services");
         JsonObject timeInput = servicesInput.getAsJsonObject("time");
         int timeSpeed = timeInput.get("speed").getAsInt();
@@ -195,27 +160,11 @@ public class BookStoreRunner implements Serializable {
         int numOfResources = servicesInput.get("resourcesService").getAsInt();
 
         JsonArray customersInput = servicesInput.getAsJsonArray("customers");
-        HashMap<Customer, List<OrderPair>> customers = new HashMap<>();
+        HashMap<Customer, List<OrderPair>> customers = customersBuilderFun(customersInput);
 
-        for (JsonElement customer : customersInput) {
-            Customer tempCust = new Customer(customer.getAsJsonObject().getAsJsonPrimitive("id").getAsInt(),
-                    customer.getAsJsonObject().getAsJsonPrimitive("name").getAsString(),
-                    customer.getAsJsonObject().getAsJsonPrimitive("address").getAsString(),
-                    customer.getAsJsonObject().getAsJsonPrimitive("distance").getAsInt(),
-                    customer.getAsJsonObject().getAsJsonObject("creditCard").getAsJsonObject().get("number").getAsInt(),
-                    customer.getAsJsonObject().getAsJsonObject("creditCard").getAsJsonObject().get("amount").getAsInt());
-            customersForPrinting.put(tempCust.getId(), tempCust);
-            List<OrderPair> tempSchedule = new Vector<>();
-            JsonArray schedules = customer.getAsJsonObject().getAsJsonArray("orderSchedule");
-            for (JsonElement schedule : schedules) {
-                tempSchedule.add(new OrderPair(schedule.getAsJsonObject().get("tick").getAsInt(),
-                        schedule.getAsJsonObject().get("bookTitle").getAsString()));
-            }
-            customers.put(tempCust, tempSchedule);
-        }
 
-        inventory.load(booksInventory);
-        resourcesHolder.load(vehicles);
+
+
 
         int NumOfServicesExceptTime = numOfSelling + numOfInventory + numOfLogistics + numOfResources + customersInput.size();
 
@@ -267,5 +216,70 @@ public class BookStoreRunner implements Serializable {
         } catch (IOException ioe) {
             ioe.printStackTrace();
         }
+    }
+    private static InputStream inputReaderFun(){
+        InputStream inputStream = null;
+        System.out.println("Please enter the json input and output files: input, output(Customer, Books, Receipts, MoneyRegister...");
+        Scanner scanner = new Scanner(System.in);
+        String inputFile = scanner.next();
+        customerOutput = scanner.next();
+        booksOutput = scanner.next();
+        receiptOutput = scanner.next();
+        registerOutput = scanner.next();
+
+        try {
+            inputStream = new FileInputStream(inputFile); // input.json
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+        return inputStream;
+    }
+    private static void initialInventoryFun(JsonObject rootObject){
+        JsonArray initialInventory = rootObject.getAsJsonArray("initialInventory");
+        BookInventoryInfo[] booksInventory = new BookInventoryInfo[initialInventory.size()];
+        int index = 0;
+        for (JsonElement bookInfo : initialInventory) {
+            booksInventory[index] = new BookInventoryInfo(bookInfo.getAsJsonObject().getAsJsonPrimitive("bookTitle").getAsString(),
+                    bookInfo.getAsJsonObject().getAsJsonPrimitive("amount").getAsInt(),
+                    bookInfo.getAsJsonObject().getAsJsonPrimitive("price").getAsInt());
+            index++;
+        }
+        inventory.load(booksInventory);
+    }
+    private static void initialResourcesFun(JsonObject rootObject){
+        JsonArray initialResources = rootObject.getAsJsonArray("initialResources");
+        DeliveryVehicle[] vehicles = null;
+        int index = 0;
+        for (JsonElement item : initialResources) { // in case the input consists of several arrays of vehicles
+            JsonArray vehiclesInput = item.getAsJsonObject().getAsJsonArray("vehicles");
+            vehicles = new DeliveryVehicle[vehiclesInput.size()];
+            for (JsonElement aVhicle : vehiclesInput) {
+                vehicles[index] = new DeliveryVehicle(aVhicle.getAsJsonObject().getAsJsonPrimitive("license").getAsInt(),
+                        aVhicle.getAsJsonObject().getAsJsonPrimitive("speed").getAsInt());
+                index++;
+            }
+        }
+        resourcesHolder.load(vehicles);
+    }
+    private static HashMap customersBuilderFun(JsonArray customersInput){
+        HashMap<Customer, List<OrderPair>> customers = new HashMap<>();
+
+        for (JsonElement customer : customersInput) {
+            Customer tempCust = new Customer(customer.getAsJsonObject().getAsJsonPrimitive("id").getAsInt(),
+                    customer.getAsJsonObject().getAsJsonPrimitive("name").getAsString(),
+                    customer.getAsJsonObject().getAsJsonPrimitive("address").getAsString(),
+                    customer.getAsJsonObject().getAsJsonPrimitive("distance").getAsInt(),
+                    customer.getAsJsonObject().getAsJsonObject("creditCard").getAsJsonObject().get("number").getAsInt(),
+                    customer.getAsJsonObject().getAsJsonObject("creditCard").getAsJsonObject().get("amount").getAsInt());
+            customersForPrinting.put(tempCust.getId(), tempCust);
+            List<OrderPair> tempSchedule = new Vector<>();
+            JsonArray schedules = customer.getAsJsonObject().getAsJsonArray("orderSchedule");
+            for (JsonElement schedule : schedules) {
+                tempSchedule.add(new OrderPair(schedule.getAsJsonObject().get("tick").getAsInt(),
+                        schedule.getAsJsonObject().get("bookTitle").getAsString()));
+            }
+            customers.put(tempCust, tempSchedule);
+        }
+        return customers;
     }
 }
