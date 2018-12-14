@@ -46,7 +46,7 @@ public class ResourcesHolder {
      * @return 	{@link Future<DeliveryVehicle>} object which will resolve to a 
      * 			{@link DeliveryVehicle} when completed.   
      */
-	public Future<DeliveryVehicle> acquireVehicle() {
+	public synchronized Future<DeliveryVehicle> acquireVehicle() {
 		Future<DeliveryVehicle> ret = new Future<>();
 		DeliveryVehicle taxi = FleetAvailable.poll();
 		if (taxi != null) {
@@ -63,7 +63,7 @@ public class ResourcesHolder {
      * <p>
      * @param vehicle	{@link DeliveryVehicle} to be released.
      */
-	public void releaseVehicle(DeliveryVehicle vehicle) {
+	public synchronized void releaseVehicle(DeliveryVehicle vehicle) {
 		if(!waitingInLine.isEmpty()){
 			waitingInLine.poll().resolve(vehicle);
 		}else{

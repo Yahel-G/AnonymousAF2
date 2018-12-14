@@ -26,10 +26,11 @@ public class MoneyRegister implements Serializable {
 
 	private ConcurrentHashMap<Integer , OrderReceipt> Receipts ;
 	private int totalEarnings;
-
+	private int orderId;
 	private MoneyRegister(){
 		Receipts = new ConcurrentHashMap<>();
 		totalEarnings = 0;
+		orderId = 0;
 	}
 
 	/**
@@ -45,9 +46,11 @@ public class MoneyRegister implements Serializable {
      * <p>   
      * @param r		The receipt to save in the money register.
      */
-	public void file (OrderReceipt r) {
-		totalEarnings += r.getPrice(); // here or in charge credit?
-		Receipts.put(r.getOrderId() , r);
+	public synchronized void  file (OrderReceipt r) {
+		r.setOrderId(orderId);
+		totalEarnings += r.getPrice();
+		Receipts.put(orderId , r);
+		orderId++;
 	}
 	
 	/**
