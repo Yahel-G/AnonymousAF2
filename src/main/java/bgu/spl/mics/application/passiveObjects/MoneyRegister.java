@@ -36,12 +36,12 @@ public class MoneyRegister implements Serializable {
 		orderId = 0;
 	}
 
-	//todo delete this?
+	//todo roy make this smarter
 	public List<OrderReceipt> getOrderReceipts() {
 		List<OrderReceipt> ret = new Vector<>();
 		Iterator<Integer> iter = Receipts.keySet().iterator();
 		while (iter.hasNext()){
-			ret.add(Receipts.get(iter));
+			ret.add(Receipts.get(iter.next()));
 		}
 
 		return ret;
@@ -92,7 +92,7 @@ public class MoneyRegister implements Serializable {
 		try {
 			FileOutputStream file = new FileOutputStream(filename);
 			ObjectOutputStream oos = new ObjectOutputStream(file);
-			oos.writeObject(Receipts);
+			oos.writeObject(getOrderReceipts());
 			oos.writeObject(totalEarnings);
 			oos.close();
 			file.close();
@@ -100,7 +100,7 @@ public class MoneyRegister implements Serializable {
 			ioe.printStackTrace();
 		}
 	}
-
+// TODO UNRELATED TO THIS FILE: REMOVE IRRELEVANT STUFF FROM workspace.xml
 	public void printReceipts(String filename) {
 		List<OrderReceipt> recList = new ArrayList<OrderReceipt>(Receipts.values());
 		try {

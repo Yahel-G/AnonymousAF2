@@ -36,6 +36,7 @@ public class Future<T> {
 			try {
 				this.wait();
 			} catch (InterruptedException e) {	// todo thread never dies because it catches the interrupt exception(?)
+				System.out.println("waddup nigga"); // todo remove
 				e.printStackTrace();
 				//return null;
 			}

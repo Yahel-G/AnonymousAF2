@@ -32,6 +32,7 @@ public class BookStoreRunner implements Serializable {
     private static String booksOutput;
     private static String receiptOutput;
     private static String registerOutput;
+    private static String inputFile;
     private static HashMap<Integer, Customer> customersForPrinting;
 
     public static CountDownLatch latch;
@@ -56,7 +57,12 @@ public class BookStoreRunner implements Serializable {
         customersForPrinting = new HashMap<>();
 
         GsonParser();
-
+        args = new String[5];
+        args[0] = inputFile;
+        args[1] = customerOutput;
+        args[2] = booksOutput;
+        args[3] = receiptOutput;
+        args[4] = registerOutput;
 
         for (int i = 0; i < APIServices.size(); i++) {
             runnables.add(APIServices.elementAt(i));
@@ -102,7 +108,7 @@ public class BookStoreRunner implements Serializable {
         printCustomers(customerOutput);
 
         //TODO: Delete!!!!!!
-        ObjectInputStream input = null;
+  /*      ObjectInputStream input = null;
         try {
 
             FileInputStream stream = new FileInputStream("a");
@@ -131,12 +137,12 @@ public class BookStoreRunner implements Serializable {
                     input.close();
                 }catch (IOException e){}
             }
-        }
+        }*/
         //TODO: End Delete
         //todo yuval zilbe stuff:
 
-        int numOfTest = Integer.parseInt(args[0].replace(new File(args[0]).getParent(), "").replace("/", "").replace(".json", ""));
-        String dir = new File(args[1]).getParent() + "/" + numOfTest + " - ";
+        int numOfTest = Integer.parseInt(args[0].replace(new File(args[0]).getAbsolutePath(), "").replace("/", "").replace(".json", ""));
+        String dir = new File(args[1]).getAbsolutePath().replace("\\", "/").replace(args[1], "") + numOfTest + " - ";
         Customer[] customers1 = customersForPrinting.values().toArray(new Customer[0]);
         Arrays.sort(customers1, Comparator.comparing(Customer::getName));
         String str_custs = Arrays.toString(customers1);
@@ -156,6 +162,12 @@ public class BookStoreRunner implements Serializable {
         Print(str_receipts, dir + "Receipts");
 
         Print(MoneyRegister.getInstance().getTotalEarnings() + "", dir + "Total");
+
+
+        System.out.println(customers2string(customers1));
+        System.out.println(books2string(books));
+        System.out.println(receipts2string(receipts));
+        // moneyRegister.printToFile();
 
     }
 
@@ -244,7 +256,7 @@ public class BookStoreRunner implements Serializable {
         InputStream inputStream = null;
         System.out.println("Please enter the json input and output files: input, output(Customer, Books, Receipts, MoneyRegister...");
         Scanner scanner = new Scanner(System.in);
-        String inputFile = scanner.next();
+        inputFile = scanner.next();
         customerOutput = scanner.next();
         booksOutput = scanner.next();
         receiptOutput = scanner.next();
@@ -373,6 +385,7 @@ public class BookStoreRunner implements Serializable {
             }
         } catch (IOException e) {
             System.out.println("Exception: " + e.getClass().getSimpleName());
+            e.printStackTrace();
         }
     }
 
