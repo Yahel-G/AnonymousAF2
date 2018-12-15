@@ -1,12 +1,15 @@
 package bgu.spl.mics.application.passiveObjects;
 
 
+
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -31,6 +34,17 @@ public class MoneyRegister implements Serializable {
 		Receipts = new ConcurrentHashMap<>();
 		totalEarnings = 0;
 		orderId = 0;
+	}
+
+	//todo delete this?
+	public List<OrderReceipt> getOrderReceipts() {
+		List<OrderReceipt> ret = new Vector<>();
+		Iterator<Integer> iter = Receipts.keySet().iterator();
+		while (iter.hasNext()){
+			ret.add(Receipts.get(iter));
+		}
+
+		return ret;
 	}
 
 	/**
