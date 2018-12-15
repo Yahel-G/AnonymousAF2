@@ -164,7 +164,8 @@ public class MessageBusImpl implements MessageBus {
 			microServices.put(m, new LinkedBlockingQueue<>());
 		}
 	}
-//asd todo delete me
+
+
 	@Override
 	public void unregister(MicroService m) {
 
