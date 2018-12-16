@@ -177,11 +177,12 @@ public class MessageBusImpl implements MessageBus {
 				Semaphore lock = locks.get(tmp);
 				try {
 					lock.acquire();
+					Events.get(tmp).remove(m);
 				} catch (InterruptedException e) {
 					e.printStackTrace();
+				}finally {
+					lock.release();
 				}
-				Events.get(tmp).remove(m);
-				lock.release();
 			}
 			Iterator<Class <? extends Broadcast>> iter = Broadcasts.keySet().iterator();
 			try {
@@ -200,7 +201,7 @@ public class MessageBusImpl implements MessageBus {
 			LinkedBlockingQueue youCompleteMe = microServices.get(m);
 			if (youCompleteMe != null) {
 				for (Object eventToComplete : youCompleteMe) {
-					Semaphore locky = locks.get(eventToComplete);
+					Semaphore locky = locks.get(eventToComplete.getClass());
 					try {
 						locky.acquire();
 					} catch (InterruptedException e) {
