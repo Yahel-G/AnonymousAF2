@@ -44,6 +44,7 @@ public class InventoryService extends MicroService{
 				BookStoreRunner.latch2.countDown();
 				terminate();
 			}
+			// ADD COUNTDOWN LATCH
 		});
 
 		subscribeEvent(CheckAvailabilityEvent.class, check ->{

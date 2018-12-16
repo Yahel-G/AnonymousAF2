@@ -8,6 +8,7 @@ import bgu.spl.mics.application.passiveObjects.OrderPair;
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.print.Book;
 import java.util.Vector;
 import java.util.concurrent.CountDownLatch;
 
@@ -25,23 +26,20 @@ import static java.lang.Thread.sleep;
  */
 public class TimeService extends MicroService{
 
-	private int speed;
-	private int duration;
+
 	private Timer BigBen;
 	private int ticksPassed;
 
 	public TimeService(int speed, int duration) {
 		super("The_Big_Ben");
-		this.speed = speed;
-		this.duration = duration;
+
 		ticksPassed = 0;
 		ActionListener taskPerformer = new ActionListener() {
 			public void actionPerformed(ActionEvent evt) {
 				if (ticksPassed < duration) {
 					ticksPassed++;
-					sendBroadcast(new TickBroadcast(ticksPassed, duration, speed));
 					System.out.println(getName() + ": *** TICK BROADCAST: " + Integer.toString(ticksPassed) + " ***"); // todo remove
-
+					sendBroadcast(new TickBroadcast(ticksPassed, duration, speed));
 				}
 			}
 		};
@@ -57,6 +55,7 @@ public class TimeService extends MicroService{
 		}
 		BigBen.start();
 		subscribeBroadcast(TickBroadcast.class, clock -> {
+
 			if (clock.getTimeOfDeath() == clock.giveMeSomeTime()) {
 				BookStoreRunner.latch2.countDown();
 				terminate();

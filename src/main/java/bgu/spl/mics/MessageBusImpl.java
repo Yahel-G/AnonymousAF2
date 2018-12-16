@@ -118,6 +118,7 @@ public class MessageBusImpl implements MessageBus {
 
 	@Override
 	public void sendBroadcast(Broadcast b) {
+
 		ConcurrentLinkedQueue<MicroService> sendTo = Broadcasts.get(b.getClass());
 		for (MicroService m: sendTo){
 			try {
@@ -126,6 +127,7 @@ public class MessageBusImpl implements MessageBus {
 				e.printStackTrace();
 			}
 		}
+
 
 	}
 
@@ -153,6 +155,7 @@ public class MessageBusImpl implements MessageBus {
 			System.out.println("Send Event "+e.toString()+" added to FuturesMap" + '\n' + FuturesMap.get(e).toString()); //todo remove
 
 		}
+
 		System.out.println("Send Event "+e.toString()+" Completed"); //todo remove
 		locker.release();
 		return fut;
