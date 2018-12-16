@@ -38,6 +38,7 @@ public class BookStoreRunner implements Serializable {
     public static CountDownLatch latch;
     public static CountDownLatch latch2;
 
+
     private static BookInventoryInfo[] books; //todo delete
 
 

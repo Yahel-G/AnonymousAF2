@@ -129,6 +129,7 @@ public class MessageBusImpl implements MessageBus {
 	 */
 	@Override
 	public void sendBroadcast(Broadcast b) {
+
 		ConcurrentLinkedQueue<MicroService> sendTo = Broadcasts.get(b.getClass());
 		for (MicroService m: sendTo){
 			try {
@@ -137,6 +138,7 @@ public class MessageBusImpl implements MessageBus {
 				e.printStackTrace();
 			}
 		}
+
 
 	}
 
@@ -174,6 +176,7 @@ public class MessageBusImpl implements MessageBus {
 			System.out.println("Send Event "+e.toString()+" added to FuturesMap" + '\n' + FuturesMap.get(e).toString()); //todo remove
 
 		}
+
 		System.out.println("Send Event "+e.toString()+" Completed"); //todo remove
 		locker.release();
 		return fut;
@@ -206,11 +209,12 @@ public class MessageBusImpl implements MessageBus {
 				Semaphore lock = locks.get(tmp);
 				try {
 					lock.acquire();
+					Events.get(tmp).remove(m);
 				} catch (InterruptedException e) {
 					e.printStackTrace();
+				}finally {
+					lock.release();
 				}
-				Events.get(tmp).remove(m);
-				lock.release();
 			}
 			Iterator<Class <? extends Broadcast>> iter = Broadcasts.keySet().iterator();
 			try {
@@ -229,7 +233,7 @@ public class MessageBusImpl implements MessageBus {
 			LinkedBlockingQueue youCompleteMe = microServices.get(m);
 			if (youCompleteMe != null) {
 				for (Object eventToComplete : youCompleteMe) {
-					Semaphore locky = locks.get(eventToComplete);
+					Semaphore locky = locks.get(eventToComplete.getClass());
 					try {
 						locky.acquire();
 					} catch (InterruptedException e) {
