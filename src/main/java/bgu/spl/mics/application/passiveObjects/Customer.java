@@ -84,7 +84,10 @@ public class Customer implements Serializable {
 		return creditCard;
 	}
 
-
+	/**
+	 * when the customer buying a book this function is called to update is remaining money by (@pararm howMuch)
+	 * @param howMuch
+	 */
 	public void chargeCredit (int howMuch){
 		// if check is only a safe check - the credit amount should be checked by the seller microService.
 		if (availableAmountInCreditCard >= howMuch){

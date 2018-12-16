@@ -172,8 +172,11 @@ public class BookStoreRunner implements Serializable {
     }
 
 
-
-
+    /**
+     * the parser reads the input file and break it down into data that he put in the data structure pre-made
+     * for that data, and then (@Call initialize) to initialize all the services needed for that run.
+     * a base function for building the framework, no params or returns.
+     */
     private static void GsonParser() {
         JsonParser Parser = new JsonParser();
         InputStream inputStream = inputReaderFun();
@@ -197,10 +200,6 @@ public class BookStoreRunner implements Serializable {
         JsonArray customersInput = servicesInput.getAsJsonArray("customers");
         HashMap<Customer, List<OrderPair>> customers = customersBuilderFun(customersInput);
 
-
-
-
-
         int NumOfServicesExceptTime = numOfSelling + numOfInventory + numOfLogistics + numOfResources + customersInput.size();
 
         initialize(numOfSelling, numOfInventory, numOfLogistics, numOfResources, customers, NumOfServicesExceptTime, timeSpeed, timeDuration);
@@ -208,6 +207,18 @@ public class BookStoreRunner implements Serializable {
 
     } // end GsonParser
 
+    /**
+     * gets from  the parser all the services needed for this run -which and how many, create them and put them in
+     * matching vectors for later use and run.
+     * @param numOfSelling how many selling services are needed
+     * @param numOfInventory how many inventory services are needed
+     * @param numOfLogistics how many logistics services are needed
+     * @param numOfResources how many resources services are needed
+     * @param customers all the customers in the store- for initializing API services
+     * @param NumOfServicesExceptTime the sum amount of all the services , in use for the latch
+     * @param timeSpeed data from the user about how long each tick is.
+     * @param timeDuration data from the user about how many ticks the run will be.
+     */
     private static void initialize(int numOfSelling, int numOfInventory, int numOfLogistics, int numOfResources, HashMap<Customer, List<OrderPair>> customers, int NumOfServicesExceptTime, int timeSpeed, int timeDuration){
         latch = new CountDownLatch(NumOfServicesExceptTime);
         latch2 = new CountDownLatch(NumOfServicesExceptTime+1);
@@ -240,7 +251,10 @@ public class BookStoreRunner implements Serializable {
         }
     }
 
-
+    /**
+     * print to file name @filename the customer at the store for output use.
+     * @param filename name to the output fill for customers.
+     */
     public static void printCustomers(String filename) {
         try {
             FileOutputStream file = new FileOutputStream(filename);
@@ -252,6 +266,11 @@ public class BookStoreRunner implements Serializable {
             ioe.printStackTrace();
         }
     }
+
+    /**
+     * inside function that break down the string from the users about the input and output files for the next run.
+     * @return the input file.
+     */
     private static InputStream inputReaderFun(){
         InputStream inputStream = null;
         System.out.println("Please enter the json input and output files: input, output(Customer, Books, Receipts, MoneyRegister...");
@@ -269,6 +288,13 @@ public class BookStoreRunner implements Serializable {
         }
         return inputStream;
     }
+
+    /**
+     * inside break down function. the function is part of the parser, and as such it break down the input file to data
+     * and stores it in the data structures made for it ahead.
+     * this function is in charge for doing the parser job for the inventory data.
+     * @param rootObject - input file data made into an object in the parser.
+     */
     private static void initialInventoryFun(JsonObject rootObject){
         JsonArray initialInventory = rootObject.getAsJsonArray("initialInventory");
         BookInventoryInfo[] booksInventory = new BookInventoryInfo[initialInventory.size()];
@@ -283,6 +309,12 @@ public class BookStoreRunner implements Serializable {
         //todo delete me:
         books = booksInventory;
     }
+    /**
+     * inside break down function. the function is part of the parser, and as such it break down the input file to data
+     * and stores it in the data structures made for it ahead.
+     * this function is in charge for doing the parser job for the resources data.
+     * @param rootObject - input file data made into an object in the parser.
+     */
     private static void initialResourcesFun(JsonObject rootObject){
         JsonArray initialResources = rootObject.getAsJsonArray("initialResources");
         DeliveryVehicle[] vehicles = null;
@@ -298,6 +330,14 @@ public class BookStoreRunner implements Serializable {
         }
         resourcesHolder.load(vehicles);
     }
+
+    /**
+     * inside break down function. the function is part of the parser, and as such it break down the input file to data
+     * and stores it in the data structures made for it ahead.
+     * this function is in charge for doing the parser job for the customers data - personal information and schedules .
+     * @param customersInput the data from the input file made into an array at the parser
+     * @return Hash map with each customer and his or her schedule.
+     */
     private static HashMap customersBuilderFun(JsonArray customersInput){
         HashMap<Customer, List<OrderPair>> customers = new HashMap<>();
 

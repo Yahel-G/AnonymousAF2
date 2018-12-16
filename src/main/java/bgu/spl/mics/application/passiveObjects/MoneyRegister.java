@@ -36,16 +36,23 @@ public class MoneyRegister implements Serializable {
 		orderId = 0;
 	}
 
-	//todo roy make this smarter
+	/**
+	 * a function that get the receipts in the money register as a vector when ask.
+	 * @return a vector with the receipts.
+	 */
+	//todo roy make this smarter - I did- need to check if works.
 	public List<OrderReceipt> getOrderReceipts() {
 		List<OrderReceipt> ret = new Vector<>();
-		Iterator<Integer> iter = Receipts.keySet().iterator();
-		while (iter.hasNext()){
-			ret.add(Receipts.get(iter.next()));
+		for(Integer it : Receipts.keySet()){
+			ret.add(Receipts.get(it));
 		}
-
+//		Iterator<Integer> iter = Receipts.keySet().iterator();
+//		while (iter.hasNext()){
+//			ret.add(Receipts.get(iter.next()));
+//		}
 		return ret;
 	}
+
 
 	/**
      * Retrieves the single instance of this class.
@@ -101,6 +108,10 @@ public class MoneyRegister implements Serializable {
 		}
 	}
 // TODO UNRELATED TO THIS FILE: REMOVE IRRELEVANT STUFF FROM workspace.xml
+	/**
+	 * Prints to a file named @filename an object MoneyRegister by printing all of its fields.
+	 * This method is called by the main method in order to generate the output..
+	 */
 	public void printReceipts(String filename) {
 		List<OrderReceipt> recList = new ArrayList<OrderReceipt>(Receipts.values());
 		try {
