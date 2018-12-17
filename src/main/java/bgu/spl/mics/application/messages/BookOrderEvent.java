@@ -3,9 +3,7 @@ package bgu.spl.mics.application.messages;
 import bgu.spl.mics.Event;
 import bgu.spl.mics.application.passiveObjects.Customer;
 
-/**
- * Created by Yahel on 01/12/2018.
- */
+
 public class BookOrderEvent implements Event {
     private Customer customer;
     private String bookTitle;
