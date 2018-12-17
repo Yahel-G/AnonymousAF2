@@ -26,7 +26,6 @@ public abstract class MicroService implements Runnable {
     private final String name;
     private MessageBus daBus;
     private ConcurrentHashMap <Class <? extends Message> , Callback> callbackMap;
-    private ConcurrentHashMap<Message, Future> FuturesMap;
 
     /**
      * @param name the micro-service name (used mainly for debugging purposes -
@@ -37,7 +36,6 @@ public abstract class MicroService implements Runnable {
         this.name = name;
         terminated = false;
         callbackMap = new ConcurrentHashMap<>();
-        FuturesMap = new ConcurrentHashMap<>();
     }
 
     /**
@@ -129,9 +127,6 @@ public abstract class MicroService implements Runnable {
      */
     protected final <T> void complete(Event<T> e, T result) {
         daBus.complete(e , result);
-//        FuturesMap.get(e).resolve(result);
-//        callbackMap.get(e).call(e);
-
     }
 
     /**
@@ -158,12 +153,11 @@ public abstract class MicroService implements Runnable {
     }
 
     /**
-     * The entry point of the micro-service. TODO: you must complete this code
+     * The entry point of the micro-service.
      * otherwise you will end up in an infinite loop.
      */
     @Override
     public final void run() {
-
         daBus.register(this);
         initialize();
         while (!terminated) {
@@ -180,7 +174,6 @@ public abstract class MicroService implements Runnable {
                 e.printStackTrace();
             }
         }
-        System.out.println(getName() + " was terminated.");
     }
 
 }
