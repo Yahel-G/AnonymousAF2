@@ -36,7 +36,6 @@ public class ResourceService extends MicroService{
 	@Override
 	protected void initialize() {
 		subscribeBroadcast(TickBroadcast.class, clock -> {
-			System.out.println(" --- Tick #" +Integer.toString(clock.giveMeSomeTime()) +"# received in service " +getName() + " ---"); // todo remove
 			if (clock.getTimeOfDeath() == clock.giveMeSomeTime()) {// save the futures and and resolve all futures with null if they're not resolved
 				holder.lastCall();
 				BookStoreRunner.latch2.countDown();
@@ -44,7 +43,6 @@ public class ResourceService extends MicroService{
 			}
 		});
 		subscribeEvent(AcquireVehicleEvent.class, getTaxi->{
-			System.out.println(getName() + " has received an AcquireVehicleEvent"); // todo remove
 			synchronized (this){
 				Future<DeliveryVehicle> taxi = holder.acquireVehicle();
 				complete(getTaxi, taxi);
