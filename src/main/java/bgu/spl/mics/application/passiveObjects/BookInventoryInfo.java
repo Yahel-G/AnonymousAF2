@@ -21,9 +21,6 @@ public class BookInventoryInfo implements Serializable {
 	}
 
 
-
-
-
 	/**
      * Retrieves the title of this book.
      * <p>
@@ -51,6 +48,7 @@ public class BookInventoryInfo implements Serializable {
 		return price;
 	}
 
+	// todo ty roy
 	public void takeBook(){
 		amount--;
 	}

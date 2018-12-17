@@ -7,7 +7,6 @@ import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
@@ -30,6 +29,7 @@ public class MoneyRegister implements Serializable {
 	private ConcurrentHashMap<Integer , OrderReceipt> Receipts ;
 	private int totalEarnings;
 	private int orderId;
+
 	private MoneyRegister(){
 		Receipts = new ConcurrentHashMap<>();
 		totalEarnings = 0;
@@ -40,16 +40,11 @@ public class MoneyRegister implements Serializable {
 	 * a function that get the receipts in the money register as a vector when ask.
 	 * @return a vector with the receipts.
 	 */
-	//todo roy make this smarter - I did- need to check if works.
 	public List<OrderReceipt> getOrderReceipts() {
 		List<OrderReceipt> ret = new Vector<>();
 		for(Integer it : Receipts.keySet()){
 			ret.add(Receipts.get(it));
 		}
-//		Iterator<Integer> iter = Receipts.keySet().iterator();
-//		while (iter.hasNext()){
-//			ret.add(Receipts.get(iter.next()));
-//		}
 		return ret;
 	}
 
@@ -107,7 +102,6 @@ public class MoneyRegister implements Serializable {
 			ioe.printStackTrace();
 		}
 	}
-// TODO UNRELATED TO THIS FILE: REMOVE IRRELEVANT STUFF FROM workspace.xml
 	/**
 	 * Prints to a file named @filename an object MoneyRegister by printing all of its fields.
 	 * This method is called by the main method in order to generate the output..

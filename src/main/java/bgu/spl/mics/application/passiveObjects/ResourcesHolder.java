@@ -20,7 +20,6 @@ public class ResourcesHolder {
 	}
 
 	private LinkedBlockingQueue<DeliveryVehicle> FleetAvailable;
-	private LinkedBlockingQueue<DeliveryVehicle> FleetBusy;
 	private LinkedBlockingQueue<Future<DeliveryVehicle>> waitingInLine;
 
 
@@ -28,7 +27,6 @@ public class ResourcesHolder {
 	private ResourcesHolder(){
 
 		FleetAvailable = new LinkedBlockingQueue<>();
-		FleetBusy = new LinkedBlockingQueue<>();
 		waitingInLine = new LinkedBlockingQueue<>();
 	}
 
@@ -82,7 +80,7 @@ public class ResourcesHolder {
 		}
 	}
 	/**
-	 * This function should be called before unregistering to resolve all unresolved futures	 *
+	 * This function should be called before unregistering to resolve all unresolved futures
 	 */
 	public void lastCall(){
 		for(Future<DeliveryVehicle> future: waitingInLine){

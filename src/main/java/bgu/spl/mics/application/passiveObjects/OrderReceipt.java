@@ -19,8 +19,7 @@ public class OrderReceipt implements Serializable {
 	private int orderTick;
 	private int processTick;
 
-	public OrderReceipt(/*int orderId*/ int customerId, String seller, String bookTitle, int Price, int issuedTick, int orderTick, int processTick){
-	//	this.orderId = orderId;
+	public OrderReceipt(int customerId, String seller, String bookTitle, int Price, int issuedTick, int orderTick, int processTick){
 		this.seller = seller;
 		this.customerId = customerId;
 		this.bookTitle = bookTitle;

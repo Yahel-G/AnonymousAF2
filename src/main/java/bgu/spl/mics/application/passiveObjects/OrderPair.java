@@ -1,8 +1,6 @@
 package bgu.spl.mics.application.passiveObjects;
 
-/**
- * Created by Yahel on 02/12/2018.
- */
+
 public class OrderPair {
 
     private String bookTitle;
