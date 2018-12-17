@@ -79,7 +79,9 @@ public class APIService extends MicroService{
 					BookOrderEvent bookEvent = new BookOrderEvent(daCustomer, bookTitle, theTime);
 					Future<OrderReceipt> receiptFuture = sendEvent(bookEvent);
 					//receiptFuture.resolve();
-					futReceipts.add(receiptFuture);// TODO  COMPLETE FUTURE??
+					if(receiptFuture!=null){
+						futReceipts.offer(receiptFuture);// TODO  COMPLETE FUTURE??
+					}
 				}
 				scheduler.remove(theTime);	// cleanup
 			}

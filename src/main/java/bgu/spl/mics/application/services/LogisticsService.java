@@ -51,14 +51,18 @@ public class LogisticsService extends MicroService {
 			Future<Future<DeliveryVehicle>> FutureDeliveryVehicleFuture = sendEvent(new AcquireVehicleEvent());
 			if(FutureDeliveryVehicleFuture != null){
 				Future<DeliveryVehicle> dev = FutureDeliveryVehicleFuture.get();
-				DeliveryVehicle taxi = dev.get();
-				if (taxi != null){
-					taxi.deliver(delivery.getAddress(), delivery.getDistance());
-					complete(delivery, true);
-					completed = true;
-					System.out.println(getName() + " sent a Free Vehicle Event"); // todo remove
-					sendEvent(new FreeVehicleEvent(taxi));
-
+				if (dev != null){
+					DeliveryVehicle taxi = dev.get();
+					if (taxi != null){
+						taxi.deliver(delivery.getAddress(), delivery.getDistance());
+						complete(delivery, true);
+						completed = true;
+						System.out.println(getName() + " sent a Free Vehicle Event"); // todo remove
+						sendEvent(new FreeVehicleEvent(taxi));
+				}else {
+						complete(delivery, false);
+						completed = true;
+					}
 				}else {
 					complete(delivery, false);
 					completed = true;

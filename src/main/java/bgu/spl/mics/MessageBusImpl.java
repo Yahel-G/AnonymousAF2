@@ -148,11 +148,7 @@ public class MessageBusImpl implements MessageBus {
 	 */
 	@Override
 	public <T> Future<T> sendEvent(Event<T> e) {
-		addLock(e.getClass());
-//		Semaphore locker = locks.get(e.getClass());
 		Future<T> fut = null;
-//		try {
-//			locker.acquire();
 			System.out.println("Send Event "+e.toString()+" Initiated"); //todo remove
 			ConcurrentLinkedQueue<MicroService> microQueue = Events.get(e.getClass());
 		if (microQueue != null && !microQueue.isEmpty()) {
@@ -220,50 +216,50 @@ public class MessageBusImpl implements MessageBus {
 			microLock.acquire();
 			if (microServices.get(m) != null ) {
 				for (Class<? extends Message> tmp : Events.keySet()) {
-					Semaphore lock = locks.get(tmp);
-					try {
-						lock.acquire();
+//					Semaphore lock = locks.get(tmp);
+//					try {
+//						lock.acquire();
 						Events.get(tmp).remove(m);
-					} catch (InterruptedException e) {
-						e.printStackTrace();
-					}finally {
-						lock.release();
+//					} catch (InterruptedException e) {
+//						e.printStackTrace();
+//					}finally {
+//						lock.release();
 					}
 				}
 				Iterator<Class <? extends Broadcast>> iter = Broadcasts.keySet().iterator();
-				try {
-					broadcastSemaphore.acquire();
+//				try {
+//					broadcastSemaphore.acquire();
 					while (iter.hasNext()){
 						Class tmp = iter.next();
 						Broadcasts.get(tmp).remove(m);
 					}
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
-				broadcastSemaphore.release();
+//				} catch (InterruptedException e) {
+//					e.printStackTrace();
+//				}
+//				broadcastSemaphore.release();
 
 				// someone might send me an event while i'm trying to unregister myself (im a microservice).
 
 				LinkedBlockingQueue youCompleteMe = microServices.get(m);
 				if (youCompleteMe != null) {
 					for (Object eventToComplete : youCompleteMe) {
-						Semaphore locky = locks.get(eventToComplete.getClass());
-						try {
-							locky.acquire();
+//						Semaphore locky = locks.get(eventToComplete.getClass());
+//						try {
+//							locky.acquire();
 							complete((Event) eventToComplete, null);
-						} catch (InterruptedException e) {
-							e.printStackTrace();
+//						} catch (InterruptedException e) {
+//							e.printStackTrace();
 						}
-						locky.release();
+//						locky.release();
 					}
 					microServices.remove(m);
-				}
-			}
+//				}
+//			}
+			microLock.release();
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
 
-		microLock.release();
 	}
 	/**
 	 * Using this method, a <b>registered</b> micro-service can take message
