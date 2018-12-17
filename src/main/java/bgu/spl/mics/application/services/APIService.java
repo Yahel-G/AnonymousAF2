@@ -38,7 +38,6 @@ public class APIService extends MicroService{
 	private HashMap<Integer, Vector<String>> scheduler;
 	private int theTime;
 	private ConcurrentLinkedQueue<Future<OrderReceipt>> futReceipts;
-	private Vector<OrderReceipt> actualReceipts;
 	private Semaphore semaphore = new Semaphore(1);
 
 	public APIService(String name , Customer customer, List<OrderPair> orderSchedule) {
@@ -46,7 +45,6 @@ public class APIService extends MicroService{
 		daCustomer = customer;
 		theTime = -1;
 		futReceipts = new ConcurrentLinkedQueue<>();
-		actualReceipts = new Vector<>();
 		scheduler = new HashMap<>();
 		for (OrderPair OP: orderSchedule){
 			if(scheduler.containsKey(OP.getTick())){	// if the scheduler already has a book in this time tick
@@ -63,41 +61,33 @@ public class APIService extends MicroService{
 
 	@Override
 	protected void initialize() {
-		System.out.println(getName() + " has initialized"); // todo remove
 		subscribeBroadcast(TickBroadcast.class, clock ->{
-			System.out.println(" --- Tick #" +Integer.toString(clock.giveMeSomeTime()) +"# received in service " +getName() + " ---"); // todo remove
-
-
 			if(clock.getTimeOfDeath() == clock.giveMeSomeTime()){
 				BookStoreRunner.latch2.countDown();
 				terminate();
-		//		System.out.println(getName() + " was terminated."); // todo is this necessary?
 			}
 			theTime = clock.giveMeSomeTime();
 			if (scheduler.containsKey(theTime)){
 				for (String bookTitle: scheduler.get(theTime)){
 					BookOrderEvent bookEvent = new BookOrderEvent(daCustomer, bookTitle, theTime);
 					Future<OrderReceipt> receiptFuture = sendEvent(bookEvent);
-					//receiptFuture.resolve();
 					if(receiptFuture!=null){
-						futReceipts.offer(receiptFuture);// TODO  COMPLETE FUTURE??
+						futReceipts.offer(receiptFuture);
 					}
 				}
 				scheduler.remove(theTime);	// cleanup
 			}
 			try {
 				semaphore.acquire(1);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-
 			for (Future<OrderReceipt> futReceipt: futReceipts){
-				if(futReceipt.isDone()){ // is this the right condition?
-					actualReceipts.add(futReceipt.get());
+				if(futReceipt.isDone()){
 					futReceipts.remove(futReceipt);		// cleanup
 				}
 			}
 			semaphore.release();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
 
 		}); // end callback
 		BookStoreRunner.latch.countDown();

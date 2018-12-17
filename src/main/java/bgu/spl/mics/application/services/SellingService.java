@@ -36,11 +36,7 @@ public class SellingService extends MicroService{
 
 	@Override
 	protected void initialize() {
-		System.out.println(getName() + " has initialized"); // todo remove
 		subscribeBroadcast(TickBroadcast.class, time->{
-			System.out.println(" --- Tick #" +Integer.toString(time.giveMeSomeTime()) +"# received in service " +getName() + " ---"); // todo remove
-
-
 			if (time.getTimeOfDeath() == time.giveMeSomeTime()) {
 				BookStoreRunner.latch2.countDown();
 				terminate();
@@ -50,43 +46,32 @@ public class SellingService extends MicroService{
 
 
 		subscribeEvent(BookOrderEvent.class, seller ->{
-			System.out.println(getName() + " has received a book order: " + seller.getBookTitle() +" for customer: " + seller.getCustomer().getName()); // todo remove
 			bookTitle = seller.getBookTitle();
 			customer = seller.getCustomer();
-
 			int processedTick = theTimeNow;
 			try {
 				locker.acquire();
 
-			System.out.println(getName() + " is sending a CheckAvailabilityEvent: " + bookTitle + "for customer " + customer.getName()); // todo remove
 			Future<Integer> bookPrice = sendEvent(new CheckAvailabilityEvent(bookTitle));
 			if (bookPrice != null){
 				int price = bookPrice.get();
-				System.out.println(getName() + " CheckAvailabilityEvent for " + bookTitle + "Result:" + Integer.toString(price)); // todo remove
 				if (price != -1){
 					if(customer.getAvailableCreditAmount() >= price){	/// sync this
 						Future<OrderResult> orderResultFuture = sendEvent(new TakeBookEvent(bookTitle));
-						System.out.println(getName() + " is sending a TakeBookEvent: " + bookTitle); // todo remove
 						if (orderResultFuture.get() == OrderResult.SUCCESSFULLY_TAKEN){
-							System.out.println(getName() + " Successfully taken " + bookTitle); // todo remove
 							moneyRegister.chargeCreditCard(customer, price);
-							//		locker.release();
 							OrderReceipt receipt = new OrderReceipt(customer.getId(), getName(), bookTitle, price, theTimeNow, seller.getOrderedTick(), processedTick);
-							System.out.println(getName() + " produced a receipt for  " + customer.getName() + receipt.toString()); // todo remove
 							moneyRegister.file(receipt);
 							sendEvent(new DeliveryEvent(customer.getDistance(), customer.getAddress()));
-							System.out.println(getName() + " is sending a DeliveryEvent for customer " + customer.getName()); // todo remove
 							complete(seller, receipt);
 						}
 						else{
 							complete(seller, null);
-							//			locker.release();
 						}
 					}
 					else{
 						complete(seller, null);
 					}
-
 				}
 				else{
 					complete(seller, null);

@@ -33,11 +33,7 @@ public class LogisticsService extends MicroService {
 
 	@Override
 	protected void initialize() {
-		System.out.println(getName() + " has initialized"); // todo remove
-
 		subscribeBroadcast(TickBroadcast.class, clock -> {
-			System.out.println(" --- Tick #" +Integer.toString(clock.giveMeSomeTime()) +"# received in service " +getName() + " ---"); // todo remove
-
 			if (clock.getTimeOfDeath() == clock.giveMeSomeTime()) {
 				BookStoreRunner.latch2.countDown();
 				terminate();
@@ -59,27 +55,22 @@ public class LogisticsService extends MicroService {
 						taxi.deliver(delivery.getAddress(), delivery.getDistance()); // going on delivery with ease.
 						complete(delivery, true);
 						completed = true;
-						System.out.println(getName() + " sent a Free Vehicle Event"); // todo remove
 						sendEvent(new FreeVehicleEvent(taxi));
 					}else { // there is no vehicle in the 2nd future.
-						System.out.println(getName() + " ::there is no vehicle in the 2nd future."); // todo remove
 						complete(delivery, false);
 						completed = true;
 					}
 				 }else { // there is no 2nd future - he is null
-					System.out.println(getName() + " ::there is no 2nd future - he is null"); // todo remove
 					complete(delivery, false);
 					completed = true;
 				}
 			}else{ //1st future isn't resolve - he is null.
-				System.out.println(getName() + " ::1st future isn't resolve - he is null."); // todo remove
 				complete(delivery, false);
 				completed = true;
 			}
-if (!completed){
-	complete(delivery, false);
-
-}
+			if (!completed) {
+				complete(delivery, false);
+			}
 		});
 		BookStoreRunner.latch.countDown();
 

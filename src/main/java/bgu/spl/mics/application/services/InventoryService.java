@@ -35,36 +35,28 @@ public class InventoryService extends MicroService{
 
 	@Override
 	protected void initialize() {
-		System.out.println(getName() + " has initialized"); // todo remove
-
 		subscribeBroadcast(TickBroadcast.class, clock -> {
-			System.out.println(" --- Tick #" +Integer.toString(clock.giveMeSomeTime()) +"# received in service " +getName() + " ---"); // todo remove
-
 			if (clock.getTimeOfDeath() == clock.giveMeSomeTime()) {
 				BookStoreRunner.latch2.countDown();
 				terminate();
 			}
-			// ADD COUNTDOWN LATCH
 		});
 
 		subscribeEvent(CheckAvailabilityEvent.class, check ->{
 			try {
 				locker.acquire();
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
 			int thePrice = inventory.checkAvailabiltyAndGetPrice(check.getBookTitle());
 				complete(check, thePrice);
 			locker.release();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
 		});
 
 		subscribeEvent(TakeBookEvent.class, take ->{
 			Semaphore locker = new Semaphore(1);
 			try {
 				locker.acquire();
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
 			if (inventory.checkAvailabiltyAndGetPrice(take.getBookTitle()) > -1){
 				inventory.take(take.getBookTitle());
 				complete(take, OrderResult.SUCCESSFULLY_TAKEN);
@@ -73,6 +65,9 @@ public class InventoryService extends MicroService{
 				complete(take, OrderResult.NOT_IN_STOCK);
 			}
 			locker.release();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
 		});
 
 		BookStoreRunner.latch.countDown();

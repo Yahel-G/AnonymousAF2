@@ -35,10 +35,7 @@ public class ResourceService extends MicroService{
 
 	@Override
 	protected void initialize() {
-		System.out.println(getName() + " has initialized"); // todo remove
 		subscribeBroadcast(TickBroadcast.class, clock -> {
-
-
 			System.out.println(" --- Tick #" +Integer.toString(clock.giveMeSomeTime()) +"# received in service " +getName() + " ---"); // todo remove
 			if (clock.getTimeOfDeath() == clock.giveMeSomeTime()) {// save the futures and and resolve all futures with null if they're not resolved
 				holder.lastCall();
@@ -46,34 +43,18 @@ public class ResourceService extends MicroService{
 				terminate();
 			}
 		});
-/*		try {
-			locker.acquire();
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}*/
 		subscribeEvent(AcquireVehicleEvent.class, getTaxi->{
 			System.out.println(getName() + " has received an AcquireVehicleEvent"); // todo remove
 			synchronized (this){
 				Future<DeliveryVehicle> taxi = holder.acquireVehicle();
 				complete(getTaxi, taxi);
 			}
-
-		//	}
 		});
-//		locker.release();
 
-/*		try {
-			locker2.acquire();
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}*/
 		subscribeEvent(FreeVehicleEvent.class, free ->{
-			System.out.println(getName() + " has received a Free Vehicle Event"); // todo remove
-
 			holder.releaseVehicle(free.getVehicle());
 			complete(free, true);
 		});
-//		locker2.release();
 
 		BookStoreRunner.latch.countDown();
 
