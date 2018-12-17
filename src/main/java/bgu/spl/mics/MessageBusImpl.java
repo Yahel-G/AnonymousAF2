@@ -26,7 +26,7 @@ public class MessageBusImpl implements MessageBus {
 	private ConcurrentHashMap<Message, Future> FuturesMap;
 	private ConcurrentHashMap<Class<? extends Message>, Semaphore> locks;
 	private Semaphore broadcastSemaphore = new Semaphore(1, true); // todo maybe don't hard code it - do it like events
-
+	private ConcurrentHashMap<MicroService, Semaphore> microLocks;
 
 
 	// make constructor
@@ -36,14 +36,7 @@ public class MessageBusImpl implements MessageBus {
 		microServices = new ConcurrentHashMap<>();
 		FuturesMap = new ConcurrentHashMap<>();
 		locks = new ConcurrentHashMap<>();
-/*
-		locks.put(AcquireVehicleEvent.class, new Semaphore(1, true));
-		locks.put(BookOrderEvent.class, new Semaphore(1,true));
-		locks.put(CheckAvailabilityEvent.class, new Semaphore(1,true));
-		locks.put(DeliveryEvent.class, new Semaphore(1,true));
-		locks.put(FreeVehicleEvent.class, new Semaphore(1,true));
-		locks.put(TakeBookEvent.class, new Semaphore(1,true));
-*/
+		microLocks = new ConcurrentHashMap<>();
 
 	}
 
@@ -156,29 +149,45 @@ public class MessageBusImpl implements MessageBus {
 	@Override
 	public <T> Future<T> sendEvent(Event<T> e) {
 		addLock(e.getClass());
-		Semaphore locker = locks.get(e.getClass());
-		try {
-			locker.acquire();
-		} catch (InterruptedException ex) {
-			ex.printStackTrace();
+//		Semaphore locker = locks.get(e.getClass());
+		Future<T> fut = null;
+//		try {
+//			locker.acquire();
+			System.out.println("Send Event "+e.toString()+" Initiated"); //todo remove
+			ConcurrentLinkedQueue<MicroService> microQueue = Events.get(e.getClass());
+		if (microQueue != null && !microQueue.isEmpty()) {
+			MicroService service = microQueue.poll();
+			if (service != null) {
+				Semaphore microLock = microLocks.get(service);
+				try{
+					microLock.acquire();
+					LinkedBlockingQueue<Message> messageQueue = microServices.get(service);
+					if (messageQueue != null) {
+						microQueue.offer(service);
+						fut = new Future<T>();
+						FuturesMap.put(e, fut);
+						messageQueue.offer(e);
+					}
+					microLock.release();
+				}catch (InterruptedException ex) {
+					ex.printStackTrace();
+				}
 		}
-		System.out.println("Send Event "+e.toString()+" Initiated"); //todo remove
-		ConcurrentLinkedQueue<MicroService> queue;
-		Future<T> fut = null; // new Future<T>()?
-		MicroService service;
-		if(Events.get(e.getClass()) != null){
-			fut = new Future<T>();
-			FuturesMap.put(e, fut);
-			queue = Events.get(e.getClass());
-			service = queue.poll();
-			queue.add(service);
-			microServices.get(service).add(e);
-			System.out.println("Send Event "+e.toString()+" added to FuturesMap" + '\n' + FuturesMap.get(e).toString()); //todo remove
 
-		}
+						}
 
-		System.out.println("Send Event "+e.toString()+" Completed"); //todo remove
-		locker.release();
+//					}
+
+//				}
+//				System.out.println("Send Event "+e.toString()+" added to FuturesMap" + '\n' + FuturesMap.get(e).toString()); //todo remove
+
+
+			System.out.println("Send Event "+e.toString()+" Completed"); //todo remove
+//			locker.release();
+//		} catch (InterruptedException ex) {
+//			ex.printStackTrace();
+//		}
+
 		return fut;
 	}
 
@@ -192,6 +201,9 @@ public class MessageBusImpl implements MessageBus {
 		if(!microServices.containsKey(m)){
 			microServices.put(m, new LinkedBlockingQueue<>());
 		}
+		if (!microLocks.containsKey(m)){
+			microLocks.put(m, new Semaphore(1,true));
+		}
 	}
 
 	/**
@@ -203,48 +215,55 @@ public class MessageBusImpl implements MessageBus {
 	 * @param m the micro-service to unregister.
 	 */
 	public void unregister(MicroService m) {
-
-		if (microServices.get(m) != null ) {
-			for (Class<? extends Message> tmp : Events.keySet()) {
-				Semaphore lock = locks.get(tmp);
-				try {
-					lock.acquire();
-					Events.get(tmp).remove(m);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}finally {
-					lock.release();
-				}
-			}
-			Iterator<Class <? extends Broadcast>> iter = Broadcasts.keySet().iterator();
-			try {
-				broadcastSemaphore.acquire();
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-			while (iter.hasNext()){
-				Class tmp = iter.next();
-				Broadcasts.get(tmp).remove(m);
-			}
-			broadcastSemaphore.release();
-
-			// someone might send me an event while i'm trying to unregister myself (im a microservice).
-
-			LinkedBlockingQueue youCompleteMe = microServices.get(m);
-			if (youCompleteMe != null) {
-				for (Object eventToComplete : youCompleteMe) {
-					Semaphore locky = locks.get(eventToComplete.getClass());
+		Semaphore microLock = microLocks.get(m);
+		try {
+			microLock.acquire();
+			if (microServices.get(m) != null ) {
+				for (Class<? extends Message> tmp : Events.keySet()) {
+					Semaphore lock = locks.get(tmp);
 					try {
-						locky.acquire();
+						lock.acquire();
+						Events.get(tmp).remove(m);
 					} catch (InterruptedException e) {
 						e.printStackTrace();
+					}finally {
+						lock.release();
 					}
-					complete((Event) eventToComplete, null);
-					locky.release();
 				}
-				microServices.remove(m);
+				Iterator<Class <? extends Broadcast>> iter = Broadcasts.keySet().iterator();
+				try {
+					broadcastSemaphore.acquire();
+					while (iter.hasNext()){
+						Class tmp = iter.next();
+						Broadcasts.get(tmp).remove(m);
+					}
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+				broadcastSemaphore.release();
+
+				// someone might send me an event while i'm trying to unregister myself (im a microservice).
+
+				LinkedBlockingQueue youCompleteMe = microServices.get(m);
+				if (youCompleteMe != null) {
+					for (Object eventToComplete : youCompleteMe) {
+						Semaphore locky = locks.get(eventToComplete.getClass());
+						try {
+							locky.acquire();
+							complete((Event) eventToComplete, null);
+						} catch (InterruptedException e) {
+							e.printStackTrace();
+						}
+						locky.release();
+					}
+					microServices.remove(m);
+				}
 			}
+		} catch (InterruptedException e) {
+			e.printStackTrace();
 		}
+
+		microLock.release();
 	}
 	/**
 	 * Using this method, a <b>registered</b> micro-service can take message

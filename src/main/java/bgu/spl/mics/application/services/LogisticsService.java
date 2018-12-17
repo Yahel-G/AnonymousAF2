@@ -47,19 +47,30 @@ public class LogisticsService extends MicroService {
 			e.printStackTrace();
 		}*/
 		subscribeEvent(DeliveryEvent.class, delivery ->{
+			boolean completed = false;
 			Future<Future<DeliveryVehicle>> FutureDeliveryVehicleFuture = sendEvent(new AcquireVehicleEvent());
-			DeliveryVehicle taxi = FutureDeliveryVehicleFuture.get().get();
-			if (taxi != null){
-				taxi.deliver(delivery.getAddress(), delivery.getDistance());
-				complete(delivery, true);
-				System.out.println(getName() + " sent a Free Vehicle Event"); // todo remove
+			if(FutureDeliveryVehicleFuture != null){
+				Future<DeliveryVehicle> dev = FutureDeliveryVehicleFuture.get();
+				DeliveryVehicle taxi = dev.get();
+				if (taxi != null){
+					taxi.deliver(delivery.getAddress(), delivery.getDistance());
+					complete(delivery, true);
+					completed = true;
+					System.out.println(getName() + " sent a Free Vehicle Event"); // todo remove
+					sendEvent(new FreeVehicleEvent(taxi));
 
-				sendEvent(new FreeVehicleEvent(taxi));
-
-			}else {
+				}else {
+					complete(delivery, false);
+					completed = true;
+				}
+			}else{
 				complete(delivery, false);
+				completed = true;
 			}
+if (!completed){
+	complete(delivery, false);
 
+}
 		});
 //		locker.release();
 		BookStoreRunner.latch.countDown();
