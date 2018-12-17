@@ -95,7 +95,7 @@ public class MoneyRegister implements Serializable {
      * currently in the MoneyRegister
      * This method is called by the main method in order to generate the output.. 
      */
-	public void printToFile(String filename) {
+	public void printToFile(String filename) { // print the money register as an object - for output uses
 		try {
 			FileOutputStream file = new FileOutputStream(filename);
 			ObjectOutputStream oos = new ObjectOutputStream(file);
@@ -112,7 +112,7 @@ public class MoneyRegister implements Serializable {
 	 * Prints to a file named @filename an object MoneyRegister by printing all of its fields.
 	 * This method is called by the main method in order to generate the output..
 	 */
-	public void printReceipts(String filename) {
+	public void printReceipts(String filename) { // print ONLY the receipts that are in the register. for output uses.
 		List<OrderReceipt> recList = new ArrayList<OrderReceipt>(Receipts.values());
 		try {
 			FileOutputStream file = new FileOutputStream(filename);

@@ -17,16 +17,16 @@ import java.util.concurrent.CountDownLatch;
  */
 public class BookStoreRunner implements Serializable {
     private static Vector<Thread> Threads = new Vector<>();
-    private static TimeService timeService = null; //Changed
-    private static Vector<APIService> APIServices = null; // Changed
-    private static Vector<Customer> customersArray = null; //Changed
-    private static Vector<InventoryService> inventoryServices = null; //Changed
-    private static Vector<SellingService> sellingServices = null;//Changed
-    private static Vector<LogisticsService> logisticsServices = null;//Changed
-    private static Vector<ResourceService> resourceServices = null;//Changed
-    public static Inventory inventory = null;//Changed
-    private static ResourcesHolder resourcesHolder = null;//Changed
-    private static MoneyRegister moneyRegister = null;//changed
+    private static TimeService timeService = null;
+    private static Vector<APIService> APIServices = null;
+    private static Vector<Customer> customersArray = null;
+    private static Vector<InventoryService> inventoryServices = null;
+    private static Vector<SellingService> sellingServices = null;
+    private static Vector<LogisticsService> logisticsServices = null;
+    private static Vector<ResourceService> resourceServices = null;
+    public static Inventory inventory = null;
+    private static ResourcesHolder resourcesHolder = null;
+    private static MoneyRegister moneyRegister = null;
 
     private static String customerOutput;
     private static String booksOutput;
@@ -57,7 +57,7 @@ public class BookStoreRunner implements Serializable {
         resourceServices = new Vector<>();
         customersForPrinting = new HashMap<>();
 
-        GsonParser();
+        GsonParser(); // working with the user - get the input, process it, and saving in the matching data structure. and preapering the output files
         args = new String[5];
         args[0] = inputFile;
         args[1] = customerOutput;
@@ -102,44 +102,11 @@ public class BookStoreRunner implements Serializable {
         }
 
 
+        inventory.printToFile(booksOutput); // todo delete
+        moneyRegister.printReceipts(receiptOutput);// todo delete
+        moneyRegister.printToFile(registerOutput);// todo delete
+        printCustomers(customerOutput);// todo delete
 
-        inventory.printToFile(booksOutput);
-        moneyRegister.printReceipts(receiptOutput);
-        moneyRegister.printToFile(registerOutput);
-        printCustomers(customerOutput);
-
-        //TODO: Delete!!!!!!
-  /*      ObjectInputStream input = null;
-        try {
-
-            FileInputStream stream = new FileInputStream("a");
-            input = new ObjectInputStream(stream);
-            Object CustomerPrint =  input.readObject();
-
-            FileInputStream stream2 = new FileInputStream("b");
-            input = new ObjectInputStream(stream2);
-            Object BooksPrint =  input.readObject();
-
-            FileInputStream stream3 = new FileInputStream("c");
-            input = new ObjectInputStream(stream3);
-            Object ReceiptPrint =  input.readObject();
-
-            FileInputStream stream4 = new FileInputStream("d");
-            input = new ObjectInputStream(stream4);
-            Object MoneyRegPrint = input.readObject();
-            int helloooooooooooooooooooooo = 17;
-        } catch (FileNotFoundException ex) {
-        }
-        catch (IOException ex2){}
-        catch (ClassNotFoundException ex3){}
-        finally {
-            if (input != null){
-                try {
-                    input.close();
-                }catch (IOException e){}
-            }
-        }*/
-        //TODO: End Delete
         //todo yuval zilbe stuff:
 
         int numOfTest = Integer.parseInt(args[0].replace(new File(args[0]).getAbsolutePath(), "").replace("/", "").replace(".json", ""));
@@ -180,14 +147,15 @@ public class BookStoreRunner implements Serializable {
      */
     private static void GsonParser() {
         JsonParser Parser = new JsonParser();
-        InputStream inputStream = inputReaderFun();
+        InputStream inputStream = inputReaderFun(); // breaks down the input to the matching structures
 
+        // "decodeing" the input down to an object that is easy to work with. using Json methods.
         Reader reader = new InputStreamReader(inputStream);
         JsonElement rootElement = Parser.parse(reader);
         JsonObject rootObject = rootElement.getAsJsonObject();
 
-        initialInventoryFun(rootObject);
-        initialResourcesFun (rootObject);
+        initialInventoryFun(rootObject); // breaks done the inventory data and load the book for the store
+        initialResourcesFun (rootObject);// breaks done the resources data and load the vehicles  for the store
 
         JsonObject servicesInput = rootObject.getAsJsonObject("services");
         JsonObject timeInput = servicesInput.getAsJsonObject("time");
@@ -204,6 +172,7 @@ public class BookStoreRunner implements Serializable {
         int NumOfServicesExceptTime = numOfSelling + numOfInventory + numOfLogistics + numOfResources + customersInput.size();
 
         initialize(numOfSelling, numOfInventory, numOfLogistics, numOfResources, customers, NumOfServicesExceptTime, timeSpeed, timeDuration);
+        // break down the services data and  keep them in there matching vectors.
 
 
     } // end GsonParser
