@@ -8,6 +8,9 @@ import bgu.spl.mics.application.messages.DeliveryEvent;
 import bgu.spl.mics.application.messages.FreeVehicleEvent;
 import bgu.spl.mics.application.messages.TickBroadcast;
 import bgu.spl.mics.application.passiveObjects.DeliveryVehicle;
+import bgu.spl.mics.application.passiveObjects.Inventory;
+import bgu.spl.mics.application.passiveObjects.MoneyRegister;
+import bgu.spl.mics.application.passiveObjects.ResourcesHolder;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Semaphore;
@@ -41,33 +44,33 @@ public class LogisticsService extends MicroService {
 				terminate();
 			}
 		});
-/*		try {
-			locker.acquire();
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}*/
+
 		subscribeEvent(DeliveryEvent.class, delivery ->{
+			// this function uses future within a future. the event acquireVehicle is needed for the deliveryEvent
+			// the logistic service is doing.  and the acquireVehicle Event has it own future.
+			// the line of calling is - delivery creates future - waiting for a vehicle to complete the delivery from the
+			// resource service. the resource service need another future - waiting to get a vehicle from the resources holder.
 			boolean completed = false;
 			Future<Future<DeliveryVehicle>> FutureDeliveryVehicleFuture = sendEvent(new AcquireVehicleEvent());
 			if(FutureDeliveryVehicleFuture != null){
-				Future<DeliveryVehicle> dev = FutureDeliveryVehicleFuture.get();
+				Future<DeliveryVehicle> dev = FutureDeliveryVehicleFuture.get(); // resource service is done, and we are trying to get the future he is holding.
 				if (dev != null){
-					DeliveryVehicle taxi = dev.get();
+					DeliveryVehicle taxi = dev.get(); // if there is a vehicle at the ready we got into the 2nd future to get that vehicle.
 					if (taxi != null){
-						taxi.deliver(delivery.getAddress(), delivery.getDistance());
+						taxi.deliver(delivery.getAddress(), delivery.getDistance()); // going on delivery with ease.
 						complete(delivery, true);
 						completed = true;
 						System.out.println(getName() + " sent a Free Vehicle Event"); // todo remove
 						sendEvent(new FreeVehicleEvent(taxi));
-				}else {
+					}else { // there is no vehicle in the 2nd future.
 						complete(delivery, false);
 						completed = true;
 					}
-				}else {
+				 }else { // there is no 2nd future - he is null
 					complete(delivery, false);
 					completed = true;
 				}
-			}else{
+			}else{ //1st future isn't resolve - he is null.
 				complete(delivery, false);
 				completed = true;
 			}
@@ -76,7 +79,6 @@ if (!completed){
 
 }
 		});
-//		locker.release();
 		BookStoreRunner.latch.countDown();
 
 	}
