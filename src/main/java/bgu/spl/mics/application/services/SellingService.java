@@ -58,12 +58,17 @@ public class SellingService extends MicroService{
 				if (price != -1){
 					if(customer.getAvailableCreditAmount() >= price){	/// sync this
 						Future<OrderResult> orderResultFuture = sendEvent(new TakeBookEvent(bookTitle));
-						if (orderResultFuture.get() == OrderResult.SUCCESSFULLY_TAKEN){
-							moneyRegister.chargeCreditCard(customer, price);
-							OrderReceipt receipt = new OrderReceipt(customer.getId(), getName(), bookTitle, price, theTimeNow, seller.getOrderedTick(), processedTick);
-							moneyRegister.file(receipt);
-							sendEvent(new DeliveryEvent(customer.getDistance(), customer.getAddress()));
-							complete(seller, receipt);
+						if (orderResultFuture != null){
+							if (orderResultFuture.get() == OrderResult.SUCCESSFULLY_TAKEN){
+								moneyRegister.chargeCreditCard(customer, price);
+								OrderReceipt receipt = new OrderReceipt(customer.getId(), getName(), bookTitle, price, theTimeNow, seller.getOrderedTick(), processedTick);
+								moneyRegister.file(receipt);
+								sendEvent(new DeliveryEvent(customer.getDistance(), customer.getAddress()));
+								complete(seller, receipt);
+							}
+							else{
+								complete(seller, null);
+							}
 						}
 						else{
 							complete(seller, null);
@@ -77,10 +82,10 @@ public class SellingService extends MicroService{
 					complete(seller, null);
 				}
 			}
-
 			else{
 				complete(seller, null);
 			}
+
 				locker.release();
 			} catch (InterruptedException e) {
 				e.printStackTrace();
