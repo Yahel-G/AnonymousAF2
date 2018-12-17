@@ -39,7 +39,6 @@ public class BookStoreRunner implements Serializable {
     public static CountDownLatch latch2;
 
 
-    private static BookInventoryInfo[] books; //todo delete
 
 
 
@@ -103,40 +102,20 @@ public class BookStoreRunner implements Serializable {
             e.printStackTrace();
         }
 
-        inventory.printToFile(booksOutput); // todo delete
-        moneyRegister.printReceipts(receiptOutput);// todo delete
-        moneyRegister.printToFile(registerOutput);// todo delete
-        printCustomers(customerOutput);// todo delete
+        inventory.printToFile(booksOutput);
+        printCustomers(customerOutput);
+        moneyRegister.printReceipts(receiptOutput);
 
-        //todo yuval zilbe stuff:
-
-        int numOfTest = Integer.parseInt(args[0].replace(new File(args[0]).getAbsolutePath(), "").replace("/", "").replace(".json", ""));
-        String dir = new File(args[1]).getAbsolutePath().replace("\\", "/").replace(args[1], "") + numOfTest + " - ";
-        Customer[] customers1 = customersForPrinting.values().toArray(new Customer[0]);
-        Arrays.sort(customers1, Comparator.comparing(Customer::getName));
-        String str_custs = Arrays.toString(customers1);
-        str_custs = str_custs.replaceAll(", ", "\n---------------------------\n").replace("[", "").replace("]", "");
-        Print(str_custs, dir + "Customers");
-
-        String str_books = Arrays.toString(books);
-        str_books = str_books.replaceAll(", ", "\n---------------------------\n").replace("[", "").replace("]", "");
-        Print(str_books, dir + "Books");
-
-        List<OrderReceipt> receipts_lst = MoneyRegister.getInstance().getOrderReceipts();
-        receipts_lst.sort(Comparator.comparing(OrderReceipt::getOrderId));
-        receipts_lst.sort(Comparator.comparing(OrderReceipt::getOrderTick));
-        OrderReceipt[] receipts = receipts_lst.toArray(new OrderReceipt[0]);
-        String str_receipts = Arrays.toString(receipts);
-        str_receipts = str_receipts.replaceAll(", ", "\n---------------------------\n").replace("[", "").replace("]", "");
-        Print(str_receipts, dir + "Receipts");
-
-        Print(MoneyRegister.getInstance().getTotalEarnings() + "", dir + "Total");
-
-
-        System.out.println(customers2string(customers1));
-        System.out.println(books2string(books));
-        System.out.println(receipts2string(receipts));
-       //  moneyRegister.printToFile();
+        // print the MoneyRegister object
+        try {
+            FileOutputStream file = new FileOutputStream(registerOutput);
+            ObjectOutputStream oos = new ObjectOutputStream(file);
+            oos.writeObject(moneyRegister);
+            oos.close();
+            file.close();
+        } catch (IOException ioe) {
+            ioe.printStackTrace();
+        }
 
     }
 
@@ -179,7 +158,6 @@ public class BookStoreRunner implements Serializable {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-
         }
 
         JsonObject rootObject = rootElement.getAsJsonObject();
@@ -286,8 +264,7 @@ public class BookStoreRunner implements Serializable {
             index++;
         }
         inventory.load(booksInventory);
-        //todo delete me:
-        books = booksInventory;
+
     }
     /**
      * inside break down function. the function is part of the parser, and as such it break down the input file to data
@@ -339,76 +316,5 @@ public class BookStoreRunner implements Serializable {
         }
         return customers;
     }
-
-
-
-
-
-
-
-
-
-
-    public static String customers2string(Customer[] customers) {
-        String str = "";
-        for (Customer customer : customers)
-            str += customer2string(customer) + "\n---------------------------\n";
-        return str;
-    }
-
-    public static String customer2string(Customer customer) {
-        String str = "id    : " + customer.getId() + "\n";
-        str += "name  : " + customer.getName() + "\n";
-        str += "addr  : " + customer.getAddress() + "\n";
-        str += "dist  : " + customer.getDistance() + "\n";
-        str += "card  : " + customer.getCreditNumber() + "\n";
-        str += "money : " + customer.getAvailableCreditAmount();
-        return str;
-    }
-
-    public static String books2string(BookInventoryInfo[] books) {
-        String str = "";
-        for (BookInventoryInfo book : books)
-            str += book2string(book) + "\n---------------------------\n";
-        return str;
-    }
-
-    public static String book2string(BookInventoryInfo book) {
-        String str = "";
-        str += "title  : " + book.getBookTitle() + "\n";
-        str += "amount : " + book.getAmountInInventory() + "\n";
-        str += "price  : " + book.getPrice();
-        return str;
-    }
-
-
-    public static String receipts2string(OrderReceipt[] receipts) {
-        String str = "";
-        for (OrderReceipt receipt : receipts)
-            str += receipt2string(receipt) + "\n---------------------------\n";
-        return str;
-    }
-    public static String receipt2string(OrderReceipt receipt) {
-        String str = "";
-        str += "customer   : " + receipt.getCustomerId() + "\n";
-        str += "order tick : " + receipt.getOrderTick() + "\n";
-        str += "id         : " + receipt.getOrderId() + "\n";
-        str += "price      : " + receipt.getPrice() + "\n";
-        str += "seller     : " + receipt.getSeller();
-        return str;
-    }
-
-    public static void Print(String str, String filename) {
-        try {
-            try (PrintStream out = new PrintStream(new FileOutputStream(filename))) {
-                out.print(str);
-            }
-        } catch (IOException e) {
-            System.out.println("Exception: " + e.getClass().getSimpleName());
-            e.printStackTrace();
-        }
-    }
-
-
 
 }

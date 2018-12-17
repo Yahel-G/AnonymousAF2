@@ -82,6 +82,7 @@ public class APIService extends MicroService{
 			for (Future<OrderReceipt> futReceipt: futReceipts){
 				if(futReceipt.isDone()){
 					futReceipts.remove(futReceipt);		// cleanup
+					daCustomer.getCustomerReceiptList().add(futReceipt.get());
 				}
 			}
 			semaphore.release();

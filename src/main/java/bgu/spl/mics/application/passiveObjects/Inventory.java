@@ -5,7 +5,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
-import java.util.concurrent.*;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Passive data-object representing the store inventory.
@@ -97,10 +99,17 @@ public class Inventory implements Serializable {
      * This method is called by the main method in order to generate the output.
      */
 	public void printToFile(String filename){
+		HashMap<String, Integer> printingMap = new HashMap<>();
+		Iterator iter = bookMap.keySet().iterator();
+		while (iter.hasNext()){
+			String bookName = (String)iter.next();
+			Integer amount = bookMap.get(bookName).getAmountInInventory();
+			printingMap.put(bookName, amount);
+		}
 		try {
 			FileOutputStream file = new FileOutputStream(filename);
 			ObjectOutputStream oos = new ObjectOutputStream(file);
-			oos.writeObject(bookMap);
+			oos.writeObject(printingMap);
 			oos.close();
 			file.close();
 		} catch (IOException ioe) {

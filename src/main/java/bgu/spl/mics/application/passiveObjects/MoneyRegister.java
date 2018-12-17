@@ -85,23 +85,7 @@ public class MoneyRegister implements Serializable {
 		c.chargeCredit(amount);
 	}
 	
-	/**
-     * Prints to a file named @filename a serialized object List<OrderReceipt> which holds all the order receipts 
-     * currently in the MoneyRegister
-     * This method is called by the main method in order to generate the output.. 
-     */
-	public void printToFile(String filename) { // print the money register as an object - for output uses
-		try {
-			FileOutputStream file = new FileOutputStream(filename);
-			ObjectOutputStream oos = new ObjectOutputStream(file);
-			oos.writeObject(getOrderReceipts());
-			oos.writeObject(totalEarnings);
-			oos.close();
-			file.close();
-		} catch (IOException ioe) {
-			ioe.printStackTrace();
-		}
-	}
+
 	/**
 	 * Prints to a file named @filename an object MoneyRegister by printing all of its fields.
 	 * This method is called by the main method in order to generate the output..
