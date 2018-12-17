@@ -70,9 +70,9 @@ public class ResourcesHolder {
 	}
 	
 	/**
-     * Receives a collection of vehicles and stores them.
+     * Receives a collection of vehicles @param vehicles and stores them.
      * <p>
-     * @param vehicles	Array of {@link DeliveryVehicle} instances to store.
+     * @param vehicles	Array of {@link DeliveryVehicle} to store.
      */
 	public void load(DeliveryVehicle[] vehicles) {
 		for (int i = 0; i < vehicles.length; i++){
@@ -80,7 +80,7 @@ public class ResourcesHolder {
 		}
 	}
 	/**
-	 * This function should be called before unregistering to resolve all unresolved futures
+	 * this function resolve all the unresolved futures in resources while going through the termination process
 	 */
 	public void lastCall(){
 		for(Future<DeliveryVehicle> future: waitingInLine){
