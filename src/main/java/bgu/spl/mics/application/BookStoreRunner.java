@@ -44,6 +44,12 @@ public class BookStoreRunner implements Serializable {
 
 
     public static void main(String[] args) {
+        inputFile = args[0];
+        customerOutput = args[1];
+        booksOutput = args[2];
+        receiptOutput = args[3];
+        registerOutput = args[4];
+
         inventory = Inventory.getInstance();
         resourcesHolder = ResourcesHolder.getInstance();
         moneyRegister = MoneyRegister.getInstance();
@@ -58,12 +64,8 @@ public class BookStoreRunner implements Serializable {
         customersForPrinting = new HashMap<>();
 
         GsonParser(); // working with the user - get the input, process it, and saving in the matching data structure. and preapering the output files
-        args = new String[5];
-        args[0] = inputFile;
-        args[1] = customerOutput;
-        args[2] = booksOutput;
-        args[3] = receiptOutput;
-        args[4] = registerOutput;
+
+
 
         for (int i = 0; i < APIServices.size(); i++) {
             runnables.add(APIServices.elementAt(i));
@@ -101,7 +103,6 @@ public class BookStoreRunner implements Serializable {
             e.printStackTrace();
         }
 
-
         inventory.printToFile(booksOutput); // todo delete
         moneyRegister.printReceipts(receiptOutput);// todo delete
         moneyRegister.printToFile(registerOutput);// todo delete
@@ -135,7 +136,7 @@ public class BookStoreRunner implements Serializable {
         System.out.println(customers2string(customers1));
         System.out.println(books2string(books));
         System.out.println(receipts2string(receipts));
-        // moneyRegister.printToFile();
+       //  moneyRegister.printToFile();
 
     }
 
@@ -192,7 +193,6 @@ public class BookStoreRunner implements Serializable {
     private static void initialize(int numOfSelling, int numOfInventory, int numOfLogistics, int numOfResources, HashMap<Customer, List<OrderPair>> customers, int NumOfServicesExceptTime, int timeSpeed, int timeDuration){
         latch = new CountDownLatch(NumOfServicesExceptTime);
         latch2 = new CountDownLatch(NumOfServicesExceptTime+1);
-        System.out.println(Integer.toString(NumOfServicesExceptTime+1) + " services should initialize"); // todo remove
 
 
         timeService = new TimeService(timeSpeed, timeDuration); //BigBen?
@@ -243,16 +243,8 @@ public class BookStoreRunner implements Serializable {
      */
     private static InputStream inputReaderFun(){
         InputStream inputStream = null;
-        System.out.println("Please enter the json input and output files: input, output(Customer, Books, Receipts, MoneyRegister...");
-        Scanner scanner = new Scanner(System.in);
-        inputFile = scanner.next();
-        customerOutput = scanner.next();
-        booksOutput = scanner.next();
-        receiptOutput = scanner.next();
-        registerOutput = scanner.next();
-
         try {
-            inputStream = new FileInputStream(inputFile); // input.json
+            inputStream = new FileInputStream(inputFile);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
