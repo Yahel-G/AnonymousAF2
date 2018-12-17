@@ -48,7 +48,9 @@ public class BookInventoryInfo implements Serializable {
 		return price;
 	}
 
-	// todo ty roy
+	/**
+	 * setter function that represents a book taken from inventory by reducing it amount by 1
+	 */
 	public void takeBook(){
 		amount--;
 	}
