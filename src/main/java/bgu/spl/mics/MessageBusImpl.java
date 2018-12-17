@@ -62,7 +62,7 @@ public class MessageBusImpl implements MessageBus {
 	@Override
 	public <T> void subscribeEvent(Class<? extends Event<T>> type, MicroService m) {
 		addLock(type);
-		Semaphore semaphore = locks.get(type);
+		Semaphore semaphore = locks.get(type); // semaphore implement as synchronization - with 1 permit.
 		try {
 			semaphore.acquire();
 		} catch (InterruptedException e) {
@@ -71,7 +71,7 @@ public class MessageBusImpl implements MessageBus {
 		if(Events.containsKey(type)){
 			Events.get(type).add(m);
 		}
-		else{// if another thread has created a new queue for this event type, we will overwrite it here
+		else{
 			ConcurrentLinkedQueue<MicroService> newQ = new ConcurrentLinkedQueue<>();
 			newQ.add(m);
 			Events.put(type, newQ);
@@ -131,7 +131,7 @@ public class MessageBusImpl implements MessageBus {
 	public void sendBroadcast(Broadcast b) {
 
 		ConcurrentLinkedQueue<MicroService> sendTo = Broadcasts.get(b.getClass());
-		for (MicroService m: sendTo){
+		for (MicroService m: sendTo){ //for each micro service subscribed
 			try {
 				microServices.get(m).put(b);
 			} catch (InterruptedException e) {
@@ -164,9 +164,11 @@ public class MessageBusImpl implements MessageBus {
 		}
 		System.out.println("Send Event "+e.toString()+" Initiated"); //todo remove
 		ConcurrentLinkedQueue<MicroService> queue;
-		Future<T> fut = null; // new Future<T>()?
+		Future<T> fut = null;
 		MicroService service;
 		if(Events.get(e.getClass()) != null){
+			// doing a round robin impl , takes the first services in the matching queue, add the event to that service,
+			// and adding the services back, at the back of the queue
 			fut = new Future<T>();
 			FuturesMap.put(e, fut);
 			queue = Events.get(e.getClass());
@@ -205,9 +207,9 @@ public class MessageBusImpl implements MessageBus {
 	public void unregister(MicroService m) {
 
 		if (microServices.get(m) != null ) {
-			for (Class<? extends Message> tmp : Events.keySet()) {
+			for (Class<? extends Message> tmp : Events.keySet()) { // for each event under micro service m
 				Semaphore lock = locks.get(tmp);
-				try {
+				try { // locking the event so no one can change it
 					lock.acquire();
 					Events.get(tmp).remove(m);
 				} catch (InterruptedException e) {
@@ -228,9 +230,7 @@ public class MessageBusImpl implements MessageBus {
 			}
 			broadcastSemaphore.release();
 
-			// someone might send me an event while i'm trying to unregister myself (im a microservice).
-
-			LinkedBlockingQueue youCompleteMe = microServices.get(m);
+			LinkedBlockingQueue youCompleteMe = microServices.get(m); // cleaning all the queue of the closing micro service by "complete" with null
 			if (youCompleteMe != null) {
 				for (Object eventToComplete : youCompleteMe) {
 					Semaphore locky = locks.get(eventToComplete.getClass());
@@ -268,11 +268,6 @@ public class MessageBusImpl implements MessageBus {
 		}
 		Message tmp = microServices.get(m).take();
 		return tmp;
-//		while (microServices.get(m) == null);
-//		return microServices.get(m).take();
-///		Lock lock1 = new ReentrantLock(); // a more sophisticated and flexiable way to synchronize.
-//		lock1.lock();
-
 
 	}
 
