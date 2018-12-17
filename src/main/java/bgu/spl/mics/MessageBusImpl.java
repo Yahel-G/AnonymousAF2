@@ -150,16 +150,16 @@ public class MessageBusImpl implements MessageBus {
 	public <T> Future<T> sendEvent(Event<T> e) {
 		Future<T> fut = null;
 			System.out.println("Send Event "+e.toString()+" Initiated"); //todo remove
-			ConcurrentLinkedQueue<MicroService> microQueue = Events.get(e.getClass());
-		if (microQueue != null && !microQueue.isEmpty()) {
-			MicroService service = microQueue.poll();
+			ConcurrentLinkedQueue<MicroService> serviceQueue = Events.get(e.getClass());
+		if (serviceQueue != null && !serviceQueue.isEmpty()) {
+			MicroService service = serviceQueue.poll();
 			if (service != null) {
 				Semaphore microLock = microLocks.get(service);
 				try{
 					microLock.acquire();
 					LinkedBlockingQueue<Message> messageQueue = microServices.get(service);
 					if (messageQueue != null) {
-						microQueue.offer(service);
+						serviceQueue.offer(service);
 						fut = new Future<T>();
 						FuturesMap.put(e, fut);
 						messageQueue.offer(e);
