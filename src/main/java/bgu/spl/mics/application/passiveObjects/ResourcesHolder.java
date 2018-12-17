@@ -67,7 +67,7 @@ public class ResourcesHolder {
 		if(!waitingInLine.isEmpty()){
 			waitingInLine.poll().resolve(vehicle);
 		}else{
-			FleetAvailable.add(vehicle);
+			FleetAvailable.offer(vehicle);
 		}
 	}
 	
@@ -79,6 +79,14 @@ public class ResourcesHolder {
 	public void load(DeliveryVehicle[] vehicles) {
 		for (int i = 0; i < vehicles.length; i++){
 			FleetAvailable.add(vehicles[i]);
+		}
+	}
+	/**
+	 * This function should be called before unregistering to resolve all unresolved futures	 *
+	 */
+	public void lastCall(){
+		for(Future<DeliveryVehicle> future: waitingInLine){
+			future.resolve(null);
 		}
 	}
 

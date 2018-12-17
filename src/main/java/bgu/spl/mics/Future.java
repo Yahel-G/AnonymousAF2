@@ -35,10 +35,8 @@ public class Future<T> {
 		while (!isDone()) {
 			try {
 				this.wait();
-			} catch (InterruptedException e) {	// todo thread never dies because it catches the interrupt exception(?)
-				System.out.println("waddup nigga"); // todo remove
+			} catch (InterruptedException e) {
 				e.printStackTrace();
-				//return null;
 			}
 		}
 		return daResult;

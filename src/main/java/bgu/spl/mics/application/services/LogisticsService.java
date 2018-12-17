@@ -12,7 +12,6 @@ import bgu.spl.mics.application.passiveObjects.Inventory;
 import bgu.spl.mics.application.passiveObjects.MoneyRegister;
 import bgu.spl.mics.application.passiveObjects.ResourcesHolder;
 
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Semaphore;
 
 /**
@@ -63,14 +62,17 @@ public class LogisticsService extends MicroService {
 						System.out.println(getName() + " sent a Free Vehicle Event"); // todo remove
 						sendEvent(new FreeVehicleEvent(taxi));
 					}else { // there is no vehicle in the 2nd future.
+						System.out.println(getName() + " ::there is no vehicle in the 2nd future."); // todo remove
 						complete(delivery, false);
 						completed = true;
 					}
 				 }else { // there is no 2nd future - he is null
+					System.out.println(getName() + " ::there is no 2nd future - he is null"); // todo remove
 					complete(delivery, false);
 					completed = true;
 				}
 			}else{ //1st future isn't resolve - he is null.
+				System.out.println(getName() + " ::1st future isn't resolve - he is null."); // todo remove
 				complete(delivery, false);
 				completed = true;
 			}

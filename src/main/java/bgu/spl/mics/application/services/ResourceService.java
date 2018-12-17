@@ -41,6 +41,7 @@ public class ResourceService extends MicroService{
 
 			System.out.println(" --- Tick #" +Integer.toString(clock.giveMeSomeTime()) +"# received in service " +getName() + " ---"); // todo remove
 			if (clock.getTimeOfDeath() == clock.giveMeSomeTime()) {// save the futures and and resolve all futures with null if they're not resolved
+				holder.lastCall();
 				BookStoreRunner.latch2.countDown();
 				terminate();
 			}
@@ -52,10 +53,11 @@ public class ResourceService extends MicroService{
 		}*/
 		subscribeEvent(AcquireVehicleEvent.class, getTaxi->{
 			System.out.println(getName() + " has received an AcquireVehicleEvent"); // todo remove
-			Future<DeliveryVehicle> taxi = holder.acquireVehicle();
-			//if (!taxi.isDone())
-			//	.get() != null){ // deadlock because the service may wait for get() with no 1 to free a vehicle
+			synchronized (this){
+				Future<DeliveryVehicle> taxi = holder.acquireVehicle();
 				complete(getTaxi, taxi);
+			}
+
 		//	}
 		});
 //		locker.release();

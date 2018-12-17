@@ -57,9 +57,7 @@ public class SellingService extends MicroService{
 			int processedTick = theTimeNow;
 			try {
 				locker.acquire();
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
+
 			System.out.println(getName() + " is sending a CheckAvailabilityEvent: " + bookTitle + "for customer " + customer.getName()); // todo remove
 			Future<Integer> bookPrice = sendEvent(new CheckAvailabilityEvent(bookTitle));
 			if (bookPrice != null){
@@ -98,7 +96,10 @@ public class SellingService extends MicroService{
 			else{
 				complete(seller, null);
 			}
-			locker.release();
+				locker.release();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
 
 		});
 		BookStoreRunner.latch.countDown();
