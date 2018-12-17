@@ -148,11 +148,40 @@ public class BookStoreRunner implements Serializable {
      */
     private static void GsonParser() {
         JsonParser Parser = new JsonParser();
-        InputStream inputStream = inputReaderFun(); // breaks down the input to the matching structures
+        InputStream inputStream = null; // breaks down the input to the matching structures
+        try {
+            inputStream = new FileInputStream(inputFile);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+
 
         // "decodeing" the input down to an object that is easy to work with. using Json methods.
         Reader reader = new InputStreamReader(inputStream);
         JsonElement rootElement = Parser.parse(reader);
+        try {
+            reader.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        try {
+            inputStream.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }  finally{
+            try {
+                inputStream.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            try {
+                reader.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+        }
+
         JsonObject rootObject = rootElement.getAsJsonObject();
 
         initialInventoryFun(rootObject); // breaks done the inventory data and load the book for the store
@@ -174,6 +203,8 @@ public class BookStoreRunner implements Serializable {
 
         initialize(numOfSelling, numOfInventory, numOfLogistics, numOfResources, customers, NumOfServicesExceptTime, timeSpeed, timeDuration);
         // break down the services data and  keep them in there matching vectors.
+
+
 
 
     } // end GsonParser
@@ -237,19 +268,6 @@ public class BookStoreRunner implements Serializable {
         }
     }
 
-    /**
-     * inside function that break down the string from the users about the input and output files for the next run.
-     * @return the input file.
-     */
-    private static InputStream inputReaderFun(){
-        InputStream inputStream = null;
-        try {
-            inputStream = new FileInputStream(inputFile);
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
-        return inputStream;
-    }
 
     /**
      * inside break down function. the function is part of the parser, and as such it break down the input file to data
