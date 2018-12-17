@@ -149,8 +149,7 @@ public class MessageBusImpl implements MessageBus {
 	@Override
 	public <T> Future<T> sendEvent(Event<T> e) {
 		Future<T> fut = null;
-			System.out.println("Send Event "+e.toString()+" Initiated"); //todo remove
-			ConcurrentLinkedQueue<MicroService> serviceQueue = Events.get(e.getClass());
+		ConcurrentLinkedQueue<MicroService> serviceQueue = Events.get(e.getClass());
 		if (serviceQueue != null && !serviceQueue.isEmpty()) {
 			MicroService service = serviceQueue.poll();
 			if (service != null) {
@@ -168,22 +167,9 @@ public class MessageBusImpl implements MessageBus {
 				}catch (InterruptedException ex) {
 					ex.printStackTrace();
 				}
+			}
+
 		}
-
-						}
-
-//					}
-
-//				}
-//				System.out.println("Send Event "+e.toString()+" added to FuturesMap" + '\n' + FuturesMap.get(e).toString()); //todo remove
-
-
-			System.out.println("Send Event "+e.toString()+" Completed"); //todo remove
-//			locker.release();
-//		} catch (InterruptedException ex) {
-//			ex.printStackTrace();
-//		}
-
 		return fut;
 	}
 
@@ -216,51 +202,28 @@ public class MessageBusImpl implements MessageBus {
 			microLock.acquire();
 			if (microServices.get(m) != null ) {
 				for (Class<? extends Message> tmp : Events.keySet()) {
-//					Semaphore lock = locks.get(tmp);
-//					try {
-//						lock.acquire();
-						Events.get(tmp).remove(m);
-//					} catch (InterruptedException e) {
-//						e.printStackTrace();
-//					}finally {
-//						lock.release();
-					}
+					Events.get(tmp).remove(m);
 				}
-				Iterator<Class <? extends Broadcast>> iter = Broadcasts.keySet().iterator();
-//				try {
-//					broadcastSemaphore.acquire();
-					while (iter.hasNext()){
-						Class tmp = iter.next();
-						Broadcasts.get(tmp).remove(m);
-					}
-//				} catch (InterruptedException e) {
-//					e.printStackTrace();
-//				}
-//				broadcastSemaphore.release();
-
-				// someone might send me an event while i'm trying to unregister myself (im a microservice).
-
-				LinkedBlockingQueue youCompleteMe = microServices.get(m);
-				if (youCompleteMe != null) {
-					for (Object eventToComplete : youCompleteMe) {
-//						Semaphore locky = locks.get(eventToComplete.getClass());
-//						try {
-//							locky.acquire();
-							complete((Event) eventToComplete, null);
-//						} catch (InterruptedException e) {
-//							e.printStackTrace();
-						}
-//						locky.release();
-					}
-					microServices.remove(m);
-//				}
-//			}
+			}
+			Iterator<Class <? extends Broadcast>> iter = Broadcasts.keySet().iterator();
+				while (iter.hasNext()){
+					Class tmp = iter.next();
+					Broadcasts.get(tmp).remove(m);
+				}
+			LinkedBlockingQueue youCompleteMe = microServices.get(m);
+			if (youCompleteMe != null) {
+				for (Object eventToComplete : youCompleteMe) {
+					complete((Event) eventToComplete, null);
+				}
+			}
+			microServices.remove(m);
 			microLock.release();
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
-
 	}
+
+
 	/**
 	 * Using this method, a <b>registered</b> micro-service can take message
 	 * from its allocated queue.
@@ -283,12 +246,6 @@ public class MessageBusImpl implements MessageBus {
 		}
 		Message tmp = microServices.get(m).take();
 		return tmp;
-//		while (microServices.get(m) == null);
-//		return microServices.get(m).take();
-///		Lock lock1 = new ReentrantLock(); // a more sophisticated and flexiable way to synchronize.
-//		lock1.lock();
-
-
 	}
 
 	/**
